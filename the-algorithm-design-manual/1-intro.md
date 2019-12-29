@@ -64,4 +64,24 @@
 
 1-4: Could be similar to the above question, where you have a road with two turns and you can go faster on that road, vs a  road with one turn. Also depends on how you're defining a turn, like, it could be this big hectic corkscrew like the kind you'd use to get onto a motorway vs two quick little turns.
 
-1-5a:
+1-5a: Putting the elements in left to right, with the given example, where T = 22 won't work.
+1 + 2 = 3
+3 + 5 = 8
+8 + 9 = 17
+17 + 10 = 27
+Therefore, this doesn't work reliably.
+
+1-5b: In the given example, putting the elements in smallest to largest won't work reliably, where T = 22.
+1 + 2 = 3
+3 + 5 = 8
+8 + 9 = 17
+17 + 10 = 27
+Therefore, this doesn't work reliably.
+
+1-5c: Adding the numbers in largest to smallest, with the given example, this won't work reliably either, because there's a good chance you'll overshoot when T = 22.
+10 + 9 = 19
+19 + 5 = 24
+Therefore, this doesn't work reliably.
+
+1-6: Let U = {1, 2, 3, 4, 5, 6}, with S1 = {1,2,3,4}  S2 = {1,2,5} S3 = {3,4,6}.
+Largest set is S1 {1,2,3,4}, so deleting these elements from U gives us {5,6}. This means we would need to bring in S2 for 5, and S3 for 6. This means we would need all three sets for this algorithm, but the most efficient way to complete the universal set would be by pulling in just S2 and S3.
