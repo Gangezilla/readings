@@ -186,3 +186,15 @@ From an algorithm design perspective, it's important to know these trees exist a
 Picking the wrong data structure for the job can be disastrous in terms of performance. Identifying the very best data structure isn't as critical because there can be several choices that perform similarly.
 
 ## Priority Queues
+
+A queue is a list where insertion is done at one end and deletion at the other. Whereas a priority queue doesn't have any ends. In a priority queue elements can be inserted in any order but removal of the elements is in a sorted order. So a priority queue is the same, except if something is super urgent you could add it in at the start.
+
+Many algos process items in a specific order. Priority queues are data structures that provide more flexibility because they allow new elements to enter a system at arbitrary intervals. It's much more cost-effective to insert a new job than to re-sort everything on each arrival. Basic priority queues support three primary operations:
+- Insert: Given an item x with key k, insert it into the priority queue.
+- Find-Minimum or Find-Maximum: Return a pointer to the item whose key value is smaller (or larger) than any other key in the queue.
+- Delete-Minimum or Delete-Maximum: Remove the item from the priority queue whose key is minimum (maximum).
+
+Building algorithms around data strucutres such as dictionaries and priority queues leads to both clean structure and good performance.
+
+## War Story: Stripping Triangulations
+3D Models are represented as a triangulated surface. You can specify a triangle's 3 endpoints, but it's more efficient to partition the triangles into strips of adjacent triangles and walk along the strip. Since each triangle shares two vertices in common with its neighbours.
