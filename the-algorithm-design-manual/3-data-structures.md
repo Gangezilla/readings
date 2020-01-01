@@ -198,3 +198,28 @@ Building algorithms around data strucutres such as dictionaries and priority que
 
 ## War Story: Stripping Triangulations
 3D Models are represented as a triangulated surface. You can specify a triangle's 3 endpoints, but it's more efficient to partition the triangles into strips of adjacent triangles and walk along the strip. Since each triangle shares two vertices in common with its neighbours.
+
+Greedy heuristics always try to grab the best thing first. Being greedy doesn't guarantee you the best possible solution.
+
+## Hashing and Strings
+Hash tables are a very practical way to maintain a dictionary by exploting the fact that looking an item up in an array takes constant time once you have its index. A hash function is a mathematical function that maps keys to its integers. We'll use the value of our hash function as an index into an array and store our item at that position. We use the value of our hash function as an index into an array and store our item at that position.
+The first step of the hash function is to map each key to a large integer which gives us unique identifier numbers. A hash table works by taking whatever it is you're storing, and hashing that into a unique ID so it's easier to compare that hash vs the entire long string.
+
+### Collision Resolution
+When we generate our unique IDs we'll usually get some conflicts. Chaining is the easiest approach to collision resolution which relies on a linked list structure that eats up a lot of memory. The alternative is called open addressing which isn't too important that i know it tbh.
+
+### Efficient String Matching via Hashing
+Strings are sequences of characters where the order of the character matters and are fundamental to many computer applications. The primary data structure of a string is an array of characters. If we're trying to find a given substring within a string
+
+### Duplicate Detection via Hashing
+The key idea of hashing is to represent a large object using a single number. The goal is a representation of the large object
+
+## Specialized Data Structures
+That covers most of the data structures, but you've got some others too. The design principles for these data structures are the same as for basic objects. We pick a data structure because there's usually some operation we do repeatedly, so we pick one that does that the most efficiently.
+- String data structures: suffix trees/arrays are special data structures that preprocess strings to make pattern matching operations faster.
+- Geometric data structures: geometric data consists of collections of points and regions. This builds into having polygons, and boundaries. Spatial data structures such as kd-trees organize points and regions by geometric location to support fast search.
+- Graph data structures: Typically represented using adjacency matrices or adjacency lists.
+- Set data structures: Subsets are usually represented via a dictionary.
+
+## War Story
+Take home lessons is that you can take a single most regularly used operation and optimise the data structure that gets used to support it.
