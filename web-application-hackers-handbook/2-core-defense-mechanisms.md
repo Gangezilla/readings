@@ -89,3 +89,50 @@ A common problem pops up when user-supplied input is manipulated across several 
 Anyone designing an app must assume it'll be targeted by dedicated and skilled attackers. A key function of the app's security mechanism is being able to handle and react to these attacks in a controlled way. These mechanisms are defensive and offensive and designed to frustrate an attacker as much as possible and notify the owners sufficiently.
 
 ### Handling Errors
+
+A key defense mechanism is for the app to handle unexpected errors gracefully and recover or present suitable error messages. Overly verbose error messages can aid attackers, especially if they're unhandled and display huge error messages. Unexpected errors often point to defects within the app's defenses that can be addressed at the source if the app's owner has enough info.
+
+### Maintaining Audit Logs
+
+Audit logs are valuable when investigating intrusion attempts. In any app you should log these:
+
+- All events relating to the authentication functionality, like successful and failed login and change of password.
+- Key transactions like credit card payments and funds transfers.
+- Access attempts that are blocked by access control mechanisms.
+- Any requests containing known attack strings that indicate overtly malicious intentions.
+
+In many security-critical apps, every client request is logged in full, providing a complete forensice record to investigate any incidents. Logs usually contain time, IP address, user's account.
+In terms of attack surface, poorly protected audit logs can provide a gold mine of info to an attacker.
+
+### Alerting Administrators
+
+A well designed alerting mechanism should let admins know about what's going on, and would usually include:
+
+- usage anaomalies, like large numbers of requests coming from a single IP
+- business anomalies, like an unusual number of funds transfers
+- requests containing known attack strings
+- requests where data thats hidden from ordinary users has been modified.
+
+### Reacting to Attacks
+
+As well as alerting admins, many apps have built-in mechanisms to react defensively to malicious users. For example, they might respond increasingly slowly to the attacker's requests or terminate their session. These measures won't deter everyone, but it will casual attackers and buy time for admins to monitor the situation. This isn't a substitute to fixing any vulnerabilities, but it's helpful.
+
+## Managing the Application
+
+In many apps, admin functions are implemented in the app itself. Where this is the case, admin mechanisms represent a critical part of the apps attack surface. Its primary attraction is as a vehicle for privilege escalation, such as:
+
+- Weaknesses in the auth mechanism may enable an attacker to gain admin access, effectively compromising the entire app.
+- Many apps don't implement effective access control of some of their admin functions. An attacker may find a means of creating a new user account with powerful privileges.
+- Admin functionality often involves displaying data that came from ordinary users. Any cross-site scripting flaws within the admin interface can lead to compromise of a user session that's guaranteed to have powerful privileges.
+- Admin functionality is often subjected to less rigorous security testing because it's suers are trusted.
+
+## Summary
+
+Despite their differences, virtually all web apps employ the same core security mechanisms. These mechanisms represent an app's primary defenses. The vulnerabilities we'll examine in this book arise from defects within these core mechanisms. Of these components, the mechanisms for handling user access and user input are the most important and should receive most of your attention when targeting an application. Defects in these mechanisms often lead to complete compromise of the app enabling you to access data belonging to other users, perform unauthorised actions and inject arbitrary code and commands.
+
+## Questions:
+
+1: Because a weakness in either auth, session management or access control can often be a backdoor to bypass the other security mechanisms.
+2: A session token is a thing that is transmitted in HTTP requests that's used to identify a session, and a session is a temporary information interchange between two or more communicating devices.
+3: It's not always possible to use a whitelist based approach because things can still slip through the cracks.
+4: Because it can be used as a vehicle for privilege escalation.
