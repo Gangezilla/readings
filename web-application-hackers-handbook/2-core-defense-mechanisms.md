@@ -61,3 +61,31 @@ This employs a whitelist containing strings or patterns that match only benign i
 ### Sanitisation
 
 This approach recognises the need to sometimes accept data that can't be guaranteed as safe. Instead of rejecting this input, the app sanitizes it in various ways to prevent it from having any adverse effects by removing potentially malicious characters, or escaping them. Apps based on data sanitization are often highly effective. The usual defense against cross-site scripting attacks it to HTML-ecnode dangerous chars before they're embedded into pages of the app.
+
+### Safe Data Handling
+
+Vulnerabilities can often be avoided not by validating input itself, but by ensuring that the processing that's performed on it is inherently safe. Eg: SQL injection attacks can be prevented through the correct use of parameterized queries for DB access. In other situations, app functionality can be designed in such a way that inherently unsafe practices like passing input to an OS interpreter are avoided.
+
+### Semantic Checks
+
+Sometimes an attacker's input is identical to what a nonmalicious user may submit, such as an attacker changing a value in a hidden form field. In this case, the app needs to validate that the account number submitted belongs to the user who has submitted it.
+
+### Boundary Validation
+
+It's not so easy to view the client as bad and untrusted and the server as good and trusted, due to:
+
+- As apps must support heaps of functionality and are composed of different tech, a typical app needs to defend itself against a huge variety of input based attacks. Because of this it's hard to have a single mechanism at the boundary to defend against all these attacks.
+- Many app functions chain together a series of different types of processing. A single piece of input might be processed in a few different components where the output gets used in a chain. A skilled attacker might be able to manipulate the app to generate malicious input for a future step. It would be hella hard to prevent this at the external boundary.
+- Defending against different categories of input-based attack may entail performing different validation checks on user input that are incompatible with one another. For example, preventing XSS might HTML-encode the `>` character to `&gt;,`, and preventing command injection attacks may require the app to block input containing `&` and `;` characters.
+
+A better model uses the concept of boundary validation. This means every component treats its inputs as coming from a potentially malicious source. This provides a solution to above, and means validation checks are unlikely to come into conflict with each other.
+
+### Multistep Validation and Canonicalization
+
+A common problem pops up when user-supplied input is manipulated across several steps as part of validation logic, and it means a crafty attacker can craft something malicious. Like, if a app strips the expression `<script>`, someone crafty could write `<scr<script>ipt>` so that the inner script tag is removed and the remains are contracted together. Also, if an attacker can exploit the ordering of the validation steps, like, if the app first removes `../` recursively, and then removes `..\` recursively, someone could write `....\/`. Bloody genius.
+
+## Handling Attackers
+
+Anyone designing an app must assume it'll be targeted by dedicated and skilled attackers. A key function of the app's security mechanism is being able to handle and react to these attacks in a controlled way. These mechanisms are defensive and offensive and designed to frustrate an attacker as much as possible and notify the owners sufficiently.
+
+### Handling Errors
