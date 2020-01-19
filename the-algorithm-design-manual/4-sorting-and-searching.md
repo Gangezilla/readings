@@ -86,7 +86,7 @@ quicksort(item_type s[], int l, int h) {
 }
 ```
 
-We can partition the array in one linear scan by maintaining three sections of the array: less than the pivot, greater than or qual to the pivot, and unexplored.
+We can partition the array in one linear scan by maintaining three sections of the array: less than the pivot, greater than or equal to the pivot, and unexplored.
 
 Since the partitioning step consists of at most n swaps, it takes linear time in the number of keys. As with mergesort, quicksort builds a recursion tree of nested subranges of the n-element array and it also spends linear time processing (partitioning instead of merging), and it also runs in O (n x h) where h is the height of the recursion tree. The difficulty is that the height of the tree depends upon where the pivot element ends up in each partition.
 At it's worst, quicksort performs at O(n^2). This means it's worse than heapsort or mergesort, which means it has to be good on average.

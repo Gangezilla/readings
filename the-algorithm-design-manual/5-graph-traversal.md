@@ -124,4 +124,4 @@ It's a good idea to use a well-designed graph data type like LEDA or Boost as a 
 
 Even elementary problems like initializing data structures can prove to be bottlenecks in algo development. Most programs working with large amounts of data have to run in linear or almost linear time. Such tight perf demands leave no room to be sloppy. Once you focus on the need for linear time performance, an appropriate algorithm or heuristic can usually be found to do the job.
 
-## Traversing a Graph
+## Traversing a Graph p 172
