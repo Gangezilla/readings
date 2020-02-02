@@ -4,13 +4,15 @@ const LinkedList = function(value) {
 };
 
 const printList = head => {
+  const values = [];
   while (head !== null) {
-    console.log(head.value);
+    values.push(head.value);
     head = head.next;
   }
-}
+  console.log(values);
+};
 
 module.exports = {
   LinkedList,
-  printList,
-}
+  printList
+};
