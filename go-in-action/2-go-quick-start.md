@@ -59,3 +59,20 @@
 - When the `main` function returns, the program terminates. Any goroutines that were launched and are running will be terminated. When writing concurrent programs, it's best to cleanly terminate any goroutines that were launched prior to letting the `main` function return.
 - This program uses a `WaitGroup` from the `sync` pacakge to track all the goroutines we're going to launch.
 - We define a loop like `for _, feed := range feeds {`, where the first argument is the index position, and the second is a copy of the value in that element. The keyword `range` is used to indicate what we want to iterate over. In the above loop, we use a blank identifier, `_`, to indicate that we're not interested in the index at this point.
+- You've also got constants, which are declared like `const dataFile = "blah"`.
+- In order to decode a data file like a JSON file, we need to define a struct for it:
+  - This struct is an exported type that declares three fields that each map to a field name in the document.
+
+```go
+  type Feed struct {
+    Name string `json:"site"`
+    URI string `json:"link`
+    Type string `json:"type"`
+  }
+```
+
+- When we're declaring a function we specify it's output like so: `func RetrieveFeeds() ([] *Feed, error)`. Here, we have no input, and we return two values. The first return value is a slice of poitners to `Feed` values. The second return value is an error value that reports back if the function call was successful.
+- I think one of the most important things in here is that you can return multiple things from a function, that's pretty cool. You just go `return feeds, err` and thats it.
+- The keyword `defer` is used to schedule a function call to be executed right after a function returns. In this context it's used to close a file, and it's placed near the start of the function to reduce bugs and improve readability. It can go anywhere, really.
+
+- UP TO PAGE 28
