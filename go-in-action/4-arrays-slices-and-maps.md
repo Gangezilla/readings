@@ -56,3 +56,39 @@ There are several ways to create and initalise slices in Go. Knowing the capacit
 - The most common way to create a slice is by making a nil slice `var slice []int`.
 
 ### Working with slices
+
+- You can access an index of a slice as you'd expect: `slice[1] = 25`.
+- There's also a bunch of stuff in here about reusing slices but it sounds hella dangerous...
+
+### Growing Slices
+
+One of the advantages of using a slice over an array is that you can grow the capacity of your slice as needed, which is done using `append`. `append` will always increase the length but not necessarily the capacity. If you call `append` and there's capacity, then the array will have the new element added into it. If there's no capacity, a new array is made and all of the old values get copied into it. Under the hood, append always doubles the existing capacity when the number of elements is under 1000, and when it's over 1000 it grows by 25%.
+
+### Iterating over slices
+
+You can iterate over slices just like you would an array:
+`for index, value := range slice {}`.
+BTW, it's important to know that the `value` given to you by the range function is a copy, so you won't be able to mutate that if you were intending to.
+
+You can also use a regular for loop like this: `for index := 2; index < len(slice); index++ {}`
+
+### Passing slices between functions
+
+This is easy because a slice is small, so it's cheap to copy and pass between functions. A slice only requires 24 bytes of memory for the pointer, length and capacity.
+
+## Map internals and fundamentals
+
+A map is a data structure that provides you with an unordered collection of key/value pairs. The strength of a map is its ability to retrieve data quickly based on the key.
+
+### Internals
+
+Maps are collections, and you can iterate over them just like with arrays and slices. It's important to note that thewy're unordered collections, so don't rely on their order. This is because a map is implemented using a hash table. The map's hash table contains a collection of buckets. When you're storing, removing or looking up something, it all starts with selecting a bucket. You do this by passing the key to the map's hash function so that Go can generate an index that's evenly distributed. We want this because the better the distribution, the quicker we can find a key/value pair.
+
+### Using a map
+
+- A map is created like so: `dict := make(map[string]int)` or you can make one with 2 key value pairs like so: `dict := map[string]string("red": "red", "orange": "orange")`
+- It's pretty easy to assign a key/value pair to a map too: `colors["red"] = "#FF0000"`
+- If you need to check if a key exists on a map, you can go like `value, exists := colors["Blue"]` and then `if exists ...`. You could also do like `value := colors["Blue"]` and then check `if value != ''`. Go will always return a value from a map, even if they key doesn't exist. Err, so I guess make sure you never want a value to be an empty string...
+- You can also iterate over a map similarly to slice/array, `for key, value := range colors {}`. You wouldn't get the index/value back but instead you get the key and the value.
+- You can delete a key by going `delete(dict, "Coral")`
+- If you pass a map between two functions, it's passed by value not reference. So functions can mutate a map.
