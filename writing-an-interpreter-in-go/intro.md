@@ -1,0 +1,3 @@
+# Intro
+
+One thing that all interpreters share is that they take source code, evaluate it, and without producing some visible, intermediate result that can be later executed. For contrast, a compiler takes source code and produces output in another language that the underlying system can understand. There a few different kinds of interpreters, some that don't bother with parsing and interpret the input right away. Others are highly optimised, some being JIT interpreters that compile the input just-in-time into native machine code. What this book focuses on is building an interpreter that builds an AST out of the code and then evaluates that tree.
