@@ -84,4 +84,6 @@ When deciding which one to use, think about this. If you need to create a new va
 You've got your classic numeric, string and Boolean types.
 
 ### Reference types
-slice, map, channel, interface and functions. When you declare a variable from one of these types, the value that's created is called a header value.
+slice, map, channel, interface and functions. When you declare a variable from one of these types, the value that's created is called a header value. They're called as such because they're essentially a pointer to an underlying data structure.
+
+### Struct types
