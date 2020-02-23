@@ -33,7 +33,7 @@ You could also do this as a one liner, like `lisa := user("Lisa", "lisa@email.co
 
 - FYI, it's idiomatic to use the keyword `var` when a variable is being set to a zero value.
 - You can also declare a field in a struct with another struct:
-  
+
 ```go
   type admin struct {
     person user
@@ -52,9 +52,9 @@ func (u user) notify() {
 }
 ```
 
-or 
+or
 
-```go 
+```go
 // implementing a method with a pointer receiver
 func (u *user) changeEmail(email string) {
   u.email = email
@@ -87,3 +87,7 @@ You've got your classic numeric, string and Boolean types.
 slice, map, channel, interface and functions. When you declare a variable from one of these types, the value that's created is called a header value. They're called as such because they're essentially a pointer to an underlying data structure.
 
 ### Struct types
+Struct types can represent data values that can be primitive or nonprimitive
+
+### Interfaces
+Polymorphism is the ability to write code that can take on different behaviour through the implementation of types. Once a type implements an interface, an entire world of functionality can be opened up to values of that type.
