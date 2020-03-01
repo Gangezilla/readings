@@ -1,0 +1,115 @@
+<canvas id="canvas" width="600" height="600" style="border: 1px grey solid">
+  <script>
+    const VIEWPORT_SIZE = 1;
+    const PROJECTION_PLACE_Z = 1;
+    const CAMERA_POSITION = [0, 0, 0];
+    const BACKGROUND_COLOR = [255, 255, 255];
+
+    const canvas = document.getElementById("canvas");
+    const canvasContext = canvas.getContext("2d");
+    let canvasBuffer = canvasContext.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+    const canvasPitch = canvasBuffer.width * 4;
+
+    function putPixel(x, y, color) {
+      x = canvas.width / 2 + x;
+      y = canvas.height / 2 - y - 1;
+
+      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+        return;
+      }
+
+      let offset = 4 * x + canvasPitch * y;
+      canvasBuffer.data[offset++] = color[0];
+      canvasBuffer.data[offset++] = color[1];
+      canvasBuffer.data[offset++] = color[2];
+      canvasBuffer.data[offset++] = 255; // full opacity
+    }
+
+    // Displays
+    function updateCanvas() {
+      canvasContext.putImageData(canvasBuffer, 0, 0);
+    }
+
+    // Linear algebra and helpers
+    const dotProduct = (v1, v2) =>
+      v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+    const subtract = (v1, v2) => [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
+
+    // Objects
+    let Sphere = function(center, radius, color) {
+      this.center = center;
+      this.radius = radius;
+      this.color = color;
+    };
+
+    // Raytracer
+    // Scene setup
+    const spheres = [
+      new Sphere([0, -1, 3], 1, [255, 0, 0]),
+      new Sphere([2, 0, 4], 1, [0, 0, 255]),
+      new Sphere([-2, 0, 4], 1, [0, 255, 0])
+    ];
+
+    // converts 2d canvas coordinates to 3d viewport coordinates
+    const canvasToViewport = p2d => [
+      (p2d[0] * VIEWPORT_SIZE) / canvas.width,
+      (p2d[1] * VIEWPORT_SIZE) / canvas.height,
+      PROJECTION_PLACE_Z
+    ];
+
+    // computes the intersection of a ray and a sphere. Returns the values of t for the intersection.
+    // using the quadratic equation
+    const intersectRaySphere = (origin, direction, sphere) => {
+      const oc = subtract(origin, sphere.center);
+
+      const k1 = dotProduct(direction, direction);
+      const k2 = 2 * dotProduct(oc, direction);
+      const k3 = dotProduct(oc, oc) - sphere.radius * sphere.radius;
+
+      const discriminant = k2 * k2 - 4 * k1 * k3;
+      if (discriminant < 0) {
+        return [Infinity, Infinity];
+      }
+
+      const t1 = (-k2 + Math.sqrt(discriminant)) / (2 * k1);
+      const t2 = (-k2 - Math.sqrt(discriminant)) / (2 * k1);
+      return [t1, t2];
+    };
+
+    // traces a ray against the set of spheres in the scene
+    const traceRay = (origin, direction, minT, maxT) => {
+      let closestT = Infinity;
+      let closestSphere = null;
+
+      for (let i = 0; i < spheres.length; i++) {
+        const ts = intersectRaySphere(origin, direction, spheres[i]);
+        if (ts[0] < closestT && minT < ts[0] && ts[0] < maxT) {
+          closestT = ts[0];
+          closestSphere = spheres[i];
+        }
+        if (ts[1] < closestT && minT < ts[1] && ts[1] < maxT) {
+          cloestT = ts[1];
+          closestSphere = spheres[i];
+        }
+      }
+
+      if (closestSphere == null) return BACKGROUND_COLOR;
+      return closestSphere.color;
+    };
+
+    for (let x = -canvas.width / 2; x < canvas.width / 2; x++) {
+      for (let y = -canvas.height / 2; y < canvas.height / 2; y++) {
+        const direction = canvasToViewport([x, y]);
+        const color = traceRay(CAMERA_POSITION, direction, 1, Infinity);
+        putPixel(x, y, color);
+      }
+    }
+
+    updateCanvas();
+  </script></canvas
+>
