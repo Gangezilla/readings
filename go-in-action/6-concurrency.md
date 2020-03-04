@@ -23,3 +23,22 @@ go func() {
   do_stuff...
 }
 ```
+
+## Channels
+Channels let you share resources between goroutines. You use `make` to create a channel, like so:
+```go
+unbuffered := make(chan int)
+buffered := make(chan string, 10)
+```
+
+Making a channel requires the keyword `chan` and then the type of data the channel will allow to be exchanged. If you're creating a buffered channel then you specify the size of the buffer as the second argument.
+
+You send a value into a channel by going like this:
+`buffered <- "Gopher"` and for another goroutine to receive that string, we go like
+`value := <- buffered`
+
+### Unbuffered channels
+An unbuffered channel is a channel with no capacity to hold any value before it's received. These types of channels require both a sending and receiving goroutine to be ready at the same instant before any send or receive operations can complete. If one isn't ready, the channel makes the first goroutine wait. Think of it like two people in a relay passing a baton. The baton will only be passed when both people are ready.
+
+### Buffered channels
+A buffered channel is a channel with capacity to hold one or more value before they're received. These types of channels don't force goroutines to be ready at the same isntant. A receive will block only if there's no value in the channel to receive, and a send will only block if there's no available buffer to place the value being sent. This leads to the biggest difference between buffered and unbuffered, which is that an unbuffered channel provides a guarantee that an exchange between two goroutines. Buffered channels are basically a queue, so think of them like that.
