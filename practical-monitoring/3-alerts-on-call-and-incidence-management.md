@@ -64,3 +64,24 @@ If you're doing work on a service and expect it to trigger an alert, set that al
 If the most common action to an alert is to perform a known and documented series of steps, you should automate it and make sure you don't have to worry about it.
 
 The most straightforward way to implement auto-healing is to implement any standardized fix into code and let the monitoring system execute the script instead of notifying a human. If the problem wasn't resolved, THEN send an alert.
+
+## On-Call
+
+On-Call can be really crappy because you might be getting lots of false alarms, unclear alerts and constant firefighting. But you can fix this so it doesn't have to be like this.
+
+### Fixing false alarms
+
+Achieving 100% accuracy is really hard, but you can tune them. When you're on call, compile a list of every alert that was fired and go through them. Think about how they can be improved or if they can be deleted.
+
+### Cutting down on needless firefighting
+
+To get out of firefighting mode, you must spend time and effort on building better underlying systems. You can help this by:
+
+- Making it the duty of on-call to work on systems resiliency and stability during their on-call shift when they aren't fighting fires.
+- Explicitly plan for systems resiliency and stability work during the following week's sprint planning based on the previous on-call week
+
+------
+
+When you get to doing some on call rotations, come back and read this section.
+
+------
