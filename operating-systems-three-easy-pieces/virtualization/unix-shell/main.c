@@ -77,3 +77,9 @@ int main(int argc, char **argv) {
     process_command(command_buffer);
   }
 }
+
+
+var s = "¡¡¡Hello, Gophers!!!"
+	s = strings.TrimSuffix(s, ", Gophers!!!")
+	s = strings.TrimSuffix(s, ", Marmots!!!")
+	fmt.Print(s)
