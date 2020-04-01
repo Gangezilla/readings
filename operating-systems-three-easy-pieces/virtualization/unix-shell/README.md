@@ -60,10 +60,11 @@ You've only got one error, `An error has occurred`. If it's a fatal error, you c
 ### Plan
 
 1) Get basic functionality up, meaning an interactive loop that will store a command and process it (stub processing it...)
-2) Create a file that contains the path, read from that on shell init and store that in memory somewhere. 
+2) Create a file that contains the path, read from that on shell init and store that in memory somewhere. (or, because it seems harder for me, save this as a char array and then update this.)
 3) Get a single command, like `ls` running.
-4) Add built in commands (exit, cd, path)
-5) With path, make sure that we reinit the existing path variable
-6) Redirection
-7) Parallel commands
-8) Deal with varying amounts of white space: ` `, `/t` 
+4) Pass in arguments for commands.
+5) Add built in commands (exit, cd, path)
+6) With path, make sure that we reinit the existing path variable
+7) Redirection
+8) Parallel commands
+9) Deal with varying amounts of white space: ` `, `/t` 
