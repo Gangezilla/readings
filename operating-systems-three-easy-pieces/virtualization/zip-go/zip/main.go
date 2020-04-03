@@ -1,38 +1,74 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
+	"strconv"
 )
 
-var result string = ""
+var zippedString string = ""
 
-func checkIfFilesExist(files []string) bool { // should maybe be a pointer dunno, investigate later.
-
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
-func processFile(file string) {
-	currentChar := ""
-	currentCount := 0
-	// open and read file
-	// make sure we have the text representation of the file.
-	// go through the string adding currentChar to above, iterating the count
-	// when nextChar is diff from currentChar, convert number to binary and char and add it to result
+func doFilesExist(filenames []string) bool { // should maybe be a pointer dunno, investigate later.
+	overallResult := true
+	for _, filename := range filenames {
+		result := fileExists(filename)
+		if !result {
+			overallResult = false
+			break
+		}
+	}
+	return overallResult
+}
+
+func processFile(filename string) {
+	// not v efficient, just pulling it all into memory.
+	// if we wanted to expand on this we'd page through the file but lazy and I have a lot of RAM
+	file, error := ioutil.ReadFile(filename)
+	if error != nil {
+		os.Exit(1)
+	}
+
+	lastChar := ""
+	currentCount := int64(0)
+
+	for _, char := range file {
+		currentChar := string(char)
+
+		if lastChar != currentChar {
+			binaryNum := strconv.FormatInt(currentCount, 2)
+			temp := string(binaryNum) + currentChar + " "
+			zippedString = zippedString + temp
+			lastChar = currentChar
+			currentCount = 0
+		} else {
+			currentCount++
+		}
+	}
+}
+
+func writeToFile() {
+	err := ioutil.WriteFile("newzip.zip", []byte(zippedString), 0644)
+	if err != nil {
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
 
 func main() {
 	files := os.Args[1:]
-	doFilesExist := checkIfFilesExist(files)
-	if !doFilesExist {
+	if !doFilesExist(files) {
 		os.Exit(1)
 	}
 	for _, file := range files {
 		processFile(file)
 	}
-	// check that files are valid
+	writeToFile()
 }
-
-// check for number of files, loop through each one.
-// read in a file
-// iterate through the string until you find a different character
-// the whole time you're adding a number up with the current count and putting that into a string
-// output to another file. ta-da.
