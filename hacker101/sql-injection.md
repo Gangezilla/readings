@@ -1,4 +1,4 @@
-# SQL Injection, 
+# SQL Injection,
 
 ## Directory traversal
 
@@ -39,7 +39,7 @@ SELECT foo, bar, baz FROM some_table WHERE foo='1' UNION SELECT 1, 2, 3; --';
 
 ### Blind SQL injection
 
-Blind is when your data is inserted into a query but you cant directly see the results. 
+Blind is when your data is inserted into a query but you cant directly see the results.
 
 You could use something like this to pull an admin password bit by bit. We can't see the result but we can see the side effect of how long it takes.
 
@@ -47,14 +47,15 @@ You could use something like this to pull an admin password bit by bit. We can't
 
 Being able to detect the database is really important.
 
-- /*! comment here */ -- this looks like a normal comment to most DBs but MySQL will include the contents of the comment inline if it has an exclamation point
+- /_! comment here _/ -- this looks like a normal comment to most DBs but MySQL will include the contents of the comment inline if it has an exclamation point
 - WAITFOR DELAY will work on MSSQL and fail elsewhere
 - UTL_INADDR.get_host_address('google.com') will do a DNS request on Oracle.
 
-
-
 ## Cheat sheet
+
 ' OR 1='1 -- returns all rows
 ' AND 0='1 -- returns no rows
 
-In input fields, you can also just put an ' at the end and you'll sometimes get results. Like: `admin '` 
+In input fields, you can also just put an ' at the end and you'll sometimes get results. Like: `admin '`
+
+https://www.netsparker.com/blog/web-security/sql-injection-cheat-sheet/
