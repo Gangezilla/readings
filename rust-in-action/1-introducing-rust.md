@@ -54,3 +54,60 @@ Rust programs are free from:
 
 When given a choice, Rust prefers the option that is easiest for the developer.
 It also has many ergonomic features. It offers generics, sophisticated data types, pattern matching and closures.
+
+### Control
+
+Having control over memory access, memory layout and specific CPU instructions is v important when optimising perf. For example, it might matter if data is stored in the stack rather than on the heap. You also sometimes will need to add reference counting to a shared value, or pass references to functions. For example, there's a bunch of ways that you can define a number:
+
+- `let a = 10;` will store an integer on the stack
+- `let b = Box::new(20);` will store an integer on the heap (also known as a box integer)
+- `let c = Rc::new(Box::new(30));` is a boxed integer wrapped within a reference counter
+- `let d = Arc::new(Mutex::new(40));` is an integer protected by a mutual exclusion lock wrapped in an atomic reference counter.
+
+## Rust's Three Big Features
+
+### Performance
+
+For software to run faster, it needs to do less. Rust pushes this burden onto the compiler which aggressively optimises both the size and speed of your program. It also:
+
+- Provides cache-friendly data structures by default. Arrays usually hold data within Rust programs rather than nested tree structures created by pointers. This is called data-oriented programming.
+- Having a modern package manager makes it easier to bring in good deps.
+- Methods are always dispatched statically unless dynamic dispatch is explicitly requested, which enables the compiler to optimise code sometimes eliminating it completely.
+
+### Concurrency
+
+Rust is very good at concurrency, with many people saying it has "fearless concurrency". It's emphasis on safety makes concurrency safe and easy.
+
+### Memory efficiency
+
+When needed you can use fixed-size structures and know exactly how every byte is managed.
+
+## Downsides
+
+- Hard to model cyclic data structures like graphs. Implementing a doubly linked list is hard because of Rust's safety checks
+- Compile times
+- Strictness, its very hard to be lazy when programming with Rust
+- Size of the language: Rust is a very big language and it can be intimidating. The downside of allowing full control is that programmers have the burden of choice.
+
+## Where does Rust fit best?
+
+- Command line utilities. Rust programs are fast because they don't have an interpreter (Ruby or Python) or virtual machine (Java or C#).
+- Data processing
+- Extending an application, it enables "ruby gems in rust" which is pretty cool.
+- Resource constrained environments such as microcontrollers.
+- Server-side applications that would sit between the OS and the application like DBs, servers and search. For example the npm package registry is written in Rust.
+- Desktop apps
+- Mobile apps in the form of "native applications"
+- Web in the form of WASM. You can port a Rust project to the browser with two additional commands on the command line.
+- Systems programing like video game engines, compilers and operating systems.
+
+## Notes from hello2
+
+- Strings in Rust are able to include a wide range of characters. Strings are UTF-8 so you can use non-English characters and emoji with ease.
+- The `!` is used to signal the use of a macro. A macro can be thought of as fancy functions for now. They offer the ability to avoid boilerplate code, and in the case of `println!` theres a bunch of type detection going on so that arbitrary data types can be printed.
+
+## Garbage collection
+
+A garbage collector is a service that tells the operating system that one of your variables has left scope and the memory allocated is able to be used by others. It's convenient but makes your program slower. Rust has no garbage collector but offers the convenience of one.
+
+You may have noticed that we haven't added any type annotations to our example code. Rust is statically typed meaning the behaviour of all data is defined in advance of the program being run.
