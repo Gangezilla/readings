@@ -65,3 +65,83 @@ Types:
 You can represent the same number with different types to save memory
 20 -> u32 -> 00000000000000000000000000010100 in memory
 20 -> i8 -> 0010100 in memory
+
+Rust has pointers like C and Go. `*` is the dereference operator which "follows the reference and returns its referent". Or as I like to say "gets the value of the pointer". We can use it like this:
+
+```rust
+fn main() {
+    let needle = 42;
+    let haystack = [1, 1, 2, 5, 14, 42] // array literal for list of integers
+
+    for reference in haystack.iter() { // .iter() returns an iterator over haystack that provides references to enabling access to individual elements
+        let item = *reference; // item is the value referred to by reference
+        if item == needle {
+            println!("{}", item)
+        }
+
+        if reference == &needle { // alternate to above
+        // reference == &needle converts needle to a reference and comapres against that
+            println!("{}", reference)
+        }
+    }
+}
+```
+
+### Type-aware control flow with match
+
+Rust has a `match` keyword which is kinda like a switch statement. It's not quite as nice as Elixir's pattern matching but it's ok. Rust is good tho, cos it ensures you're testing against all possible values. You'd use it like this:
+
+```rust
+fn main() {
+    let haystack = [1, 1, 2, 3, 5, 14, 42]
+
+    for reference in haystack.iter() {
+        let item = *reference
+
+        let result = match item {
+            42 | 132 => "hit!",
+            _ => "miss"
+        }
+
+        if result == "hit!" {
+            println("{}: {}", item, result);
+        }
+    }
+}
+```
+
+`match` is important in Rust with many control sturctures being defined in terms of `match` under the hood.
+
+### Getting stuff done with functions
+
+One of the fundamental abstractions provided by programming languages is the subroutine and in Rust these are called functions
+
+A function signature looks like this: `fn add(i: i32, j: i32) -> i32 {`. As you can see Rust requires us to define our parameters' types and the function's return type.
+
+Let's break it down.
+
+- `fn`: keyword
+- `add`: identifier
+- `i`, `j`: parameters
+- `i32`: type
+- `->`: thin arrow to indicate return
+- `i32`: return type
+- `{`: beginning of code block
+
+#### Advanced function definitions
+
+Rust's functions can get pretty gnarly, so let's look at a few.
+
+##### Explicit lifetime annotations
+
+`add_with_lifetimes<'a, 'b>(i: &'a i32, j: &'b i32) -> i32`
+
+TL;DR: the extra info is giving more specific info to the Rust compiler about data that lives outside the function. Functions that use references - denoted by the ampersands preceding the types - have data that exists outside of their scope.
+
+Objects that live outside of a function are checked to make sure that accessing them is valid throughout that function. Rust checks to ake sure that all input data will live at least as long as the function that needs it.
+
+Underpinning Rust's safety checks is a **lifetime** system that tends to be able to work unaided. Usually, lifetime parameters don't need to be provided which is known as lifetime elision. The names `'a` and `'b` are arbitrary.
+
+`i: &'a i32` reads as "variable i is a reference to a 32 bit integer with lifetime 'a'".
+
+#### Generic Functions
