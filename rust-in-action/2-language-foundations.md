@@ -145,3 +145,86 @@ Underpinning Rust's safety checks is a **lifetime** system that tends to be able
 `i: &'a i32` reads as "variable i is a reference to a 32 bit integer with lifetime 'a'".
 
 #### Generic Functions
+
+Rust allows you to write functions that handle many input types like so:
+
+`fn add(i: T, j: T) -> T`
+
+Capital letters in place of a type indicate a **generic** type. Generics enable significnt code reuse.
+
+You can also place constraints on generics in the form of **traits**.
+
+`fn add<T: Add<Output = T>>(i: T, j: T) -> T`
+
+We discuss them later but it's good to be across them.
+
+TLDR
+
+- Terms in lower case represent variables
+- Single upper case letters denote generic type variables
+- Terms beginning with uper case are traits (Add) and specific types (String)
+- Labels 'a denote lifetime parameters
+
+### `grep-lite` v1
+
+Rust's strings do a lot by themselves. Like, you can do line by line iteration super easily like `for line in quote.lines()` which is sick.
+
+On this note, Rust has two string types.
+
+- `str` is a high perf, feature poor type. Once created, `str` data is not copied when it's reused. It's usually references as `&str` which is a "string slice". Encoded as UTF-8
+- `String` is close to other languages. It supports modification incl expanding and contraction. It's an **owned** type which in Rust means they're guaranteed to live as long as their sole owner. Encoded as UTF-8
+- `char` which is a single 4 byte character (UTF-32)
+- `[u8]` is a slice of raw bytes
+- `std::ffi::OSString` is a platform native string which is close to `String`, but without a guarantee that it's encoded as UTF-8 and won't contain the zero byte (`0x00`)
+
+### Making lists of things with arrays, slices and vectors
+
+Arrays are fixed width and extremely lightweight Vectors are growable but a bit less performant.
+
+#### Array
+
+An array in Rust is a tightly packed collection of the same thing. It's possible to replace items in an array, but its size may not change. You define arrays like this `[1, 2, 3]` or as a repeat expression `[0; 100]` where the left value is repeated by the number on the right.
+
+```rust
+fn main() {
+    let one = [1, 2, 3]; //array literal, rust infers its type itself (probs [i32; 3])
+    let two: [u8; 3] = [1, 2, 3]; // explicitly declaring type
+    let blank1 = [0; 3;] // repeat expression, will eval to [0, 0, 0]
+    let blank2: [u8; 3] = [0; 3];
+
+    let arrays = [one, two, blank1, blank2];
+
+    for a in &arrays { // a reference to an array returns a slice, and you can iterate through slices without `iter()`
+        print!("{:?}: ", a);
+        for n in a.iter() { // but if its not a reference you can iter
+            print!("\t{} + 10 = {}", n, n + 10);
+        }
+
+        let mut sum = 0;
+        for i in 0..a.len() {
+            sum += a[i]; // requesting an item out of bounds will runtime panic
+        }
+    }
+}
+```
+
+Arrays are a contiguous block of memory with elements of a uniform type. The size of the array matters to the type system, meaning `[u8; 3]` is a different type than `[u8; 4]`. You usually interact with arrays through a slice reference `&[T]`. Rust arrays are allocated on the stack meaning you can access them directly without needing a pointer.
+
+Side note, that makes a lot of sense. A pointer is allocated on the stack, but the object that pointer points to is allocated on the heap.
+
+#### Slices
+
+Slices are dynamically sized array-like objects, which means their size isn't known at compile time. The dynamic is a bit closer to dynamic typing, which is why their type signature is `[T]`. It's easier to add traits to slices than arrays, and a trait is how you add methods to objects.
+Slices also act as a view on arrays, meaning slices can gain fast read-only access to data without needing to copy anything.
+
+#### Vectors
+
+Vectors `Vec<T>` are growable lists of `T`. They're not quite as performant as arrays but they're more flexible.
+
+`Vec<Vec<(usize, String)>>` is a vector of vectors. `(usize, String)` is a tuple
+
+`Vec<T>` performs best when you can provide it with a size hint with `Vec::with_capacity()`. This estimate minimises the number of times memory will need to be allocated from the OS.
+
+### Including 3rd party code
+
+We include a 3rd party "crate" in the `Cargo.toml` file in the `[dependencies]` section like `regex = "1"`. After this we run `cargo build` and it'll allll download and play nice.

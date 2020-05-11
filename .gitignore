@@ -1,0 +1,4 @@
+*.o
+/target/
+**/*.rs.bk
+/rust-in-action/samples/grep-lite/target/
