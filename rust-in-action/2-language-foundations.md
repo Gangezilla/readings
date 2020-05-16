@@ -227,4 +227,22 @@ Vectors `Vec<T>` are growable lists of `T`. They're not quite as performant as a
 
 ### Including 3rd party code
 
-We include a 3rd party "crate" in the `Cargo.toml` file in the `[dependencies]` section like `regex = "1"`. After this we run `cargo build` and it'll allll download and play nice.
+We include a 3rd party "crate" in the `Cargo.toml` file in the `[dependencies]` section like `regex = "1"`. After this we run `cargo build` and it'll allll download and play nice. You can also run `cargo doc` to generate documentation for all your 3rd party code locally, which is pretty sick.
+
+### Supporting command line args
+
+CLI support isn't included in the Rust stdlib, so we use a 3rd party crate called `clap`.
+
+### File I/O
+
+General pattern is to open a `File` object then wrap that in a `BufReader` which handled buffered I/O which reduces system calls.
+
+```rust
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
+
+fn main() {
+  let f = File::open("readme.md").unwrap();
+}
+```
