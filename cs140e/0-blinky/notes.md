@@ -30,8 +30,6 @@ For phase 3 we only care about three registers:
 
 The `FSEL{n}` field determines the functionality of the nth GPIO pin.
 
-
-
 #### Which value do we write to which field in these registers to set/clear pin 16?
 
 We write to `GPSET0` to set a pin (turn it on) and `GPCLR0` to clear a pin (turn it off). on p95 of the spec sheet: The otput set registers are used to set a GPIO pin. The `SET{n}` field defins the respective GPIO pin to set. 

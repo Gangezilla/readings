@@ -72,4 +72,14 @@ fn main() {
     let slice2: &[i32] = &vector[1..4];
 
     // use '{:?}' to print something debug style
+    println!("{:?} | {:?}", vector, slice2);
+
+    // Array, slice and vector indexing
+    println!("{}", four_ints[1]); // 2
+    println!("{}", four_ints[2]); // 3
+    println!("{}", four_ints[3]); // 4
+
+    // Tuples //
+
+    let x: (i32, &str, f64) = (1, "hello", 3.4)
 }
