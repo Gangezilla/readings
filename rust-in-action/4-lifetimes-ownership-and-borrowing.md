@@ -21,3 +21,93 @@ During the call to `check_status` ownership *moves* to the `check_status` functi
 ### Special behaviour of primitive types
 
 When we implemented the structs, the compiler starts getting mad at us. This is because primitive types implement the `Copy` behaviour. Types that implement `Copy` are duplicated at times that would otherwise be illegal. Primitive types are said to possess **copy semantics**, whereas all other types have **move semantics**.
+
+## What is an Owner? Does it have any responsibilities?
+
+In Rust, ownership is limited to an owner cleaning up when its values lifetimes end. When values go out of scope of their lifetimes end their destructors are called. A destructor is a function that deletes references to the code and frees memory. You can implement this yourself but most of the time shouldn't worry about it.
+
+This implies that values may not outlive their owner. This means that a data structure built off references (like a linked list) is a bit more complex. If the root node of a tree owns the tree, it can't be removed without taking ownership into account.
+
+## How ownership moves
+
+There are two main ways to shift ownership from one variable to another. The first is assignment, and the second is passing data through a function barrier as an arg or return value.
+
+Here we can see that `sat_a` starts its life with ownership over a CubeSat object.
+
+```rust
+fn main() {
+    let sat_a = CubeSat { id: 0 };
+}
+```
+
+The `CubeSat` object is passed to `check_status` as an arg, moving ownership to the local variable `sat_id`.
+
+```rust
+fn main() {
+    let sat_a = CuebSat { id: 0 };
+    ...
+    let a_status = check_status(sat_a);
+}
+```
+
+Another possibly could have been that `sat_a` relinquishes its ownership within `main()` to another variable
+
+```rust
+fn main() {
+    let sat_a = CubeSat { id: 0 }
+    ...
+    let new_sat_a = sat_a;
+}
+```
+
+We can fix the code we're working on by updating the `check_status` function to return the `sat_id` and resassigning the value of `sat_a` from that check_status function. This way, the lifetime value of `sat_a` is not dropped, but persists after it is used in this function.
+
+## Resolving Ownership Issues
+
+Rust's ownership system provides a route to memory safety without needing a garbage collector, but it's ownership system can trip you up if you don't know what's going on.
+
+Four general strategies can help with ownership issues:
+
+1. Use references where full ownership isn't required.
+2. Duplicate the value.
+3. Refactor code to reduce the number of long-lived objects
+4. Wrap your data in a type designed to assist with movement issues.
+
+We're going to extend our cubesat system so that each can receive and send messages.
+
+### Use references where full ownership isn't required
+
+Instead of requesting ownership, use a borrow in function definitions. For read-only access, use `& T`. For read/write access, use `&mut T`. Ownership might be needed in advanced cases, such as when functions wish to adjust the lifetime of their arguments.
+
+With our new implementation, we make `Groundstation.send()` and `CubeSat.recv()` require mutable access to a `CubeSat` instance, as both methods are modifying the underlying `CubeSat.messages` vector. We move ownership of the message that we're sending into `messages.push` which provides us with some QA later, notifying us if we were 
+
+
+### Use fewer long-lived values
+
+If we have a large, long-standing object it can be unwieldy to keep this around for every component of your program that needs it. To do this, we'll create a function that returns CubeSat identifiers. When we need to communicate with a satellite we'll create a new object.
+
+```rust
+fn fetch_sat_ids() -> Vec<u64> {
+    vec![1,2,3]
+}
+
+// a method for GroundStation to create a CubeSat instance
+impl GroundStation {
+    fn connect(&self, sat_id: u64) -> CubeSat {
+        CubeSat {id: sat_id, mailbox: Mailbox {messages: vec![[]]}
+        }
+    }
+}
+```
+
+### Duplicate the value
+
+Having a single owner for every object can mean significant up-front planning and/or refactoring. An alternative to refactoring is to simply copy values. Don't do this all the time, but it can help in a pinch. Types can be opt into two modes of being copied: `Clone` and `Copy`. `Copy` acts implicitly whenever ownership would otherwise be moved so the bits of object a are replicated to create object b. `Clone` acts explicitly where Types that implement it have a `.clone()` method.
+
+To implement `Copy`, your types must implement `Copy`. Integers and floating point numbers implement `Copy` but `String` and other tpyes don't. The reason is that a `String`s internal pointers would be duplicated, not the data those pointers refer to.
+
+### Wrap Data within Specialty Types
+
+A final strat is to use "wrapper" types that present a facade to the outside world of move semantics, but actually are doing something special under the hood. Rust lets programmers opt-in to runtime garbage collection. `Rc<T>` means a "reference counted type T". We ould wrap a single instance of `GroundStation` in a `Rc`, providing shared access to each of the satellites.
+
+Setting this up involves a call to the `Rc::new()` static method
