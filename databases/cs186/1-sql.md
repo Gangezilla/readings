@@ -90,7 +90,11 @@ GROUP BY S.dept
 
 For each group we compute that average, that aggregate. Sometimes called the cardinality of that output. If something's in the GROUP BY list, it can also be in the select group to tag them.
 
-After we do a `GROUP BY` there may be groups we don't want in the output and we can use `HAVING ` for this. `HAVING` is applied after grouping and aggregation. `HAVING` can only be used in aggregate queries. 
+After we do a `GROUP BY` there may be groups we don't want in the output and we can use `HAVING` for this. `HAVING` is applied after grouping and aggregation. `HAVING` can only be used in aggregate queries. 
+
+The WHERE clause places conditions on the selected columns, whereas the HAVING clause places conditions on groups created by the GROUP BY clause.
+
+HAVING is a way of performing some function on groups that are outputted by GROUP BY. so it gets executed by creating the groups, and then HAVING is a filter applied across those groups.
 
 ```SQL
 SELECT AVG (S.gpa), S.dept
