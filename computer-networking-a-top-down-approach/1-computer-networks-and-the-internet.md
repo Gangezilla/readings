@@ -41,3 +41,11 @@ The two most prevalent broadband access networks are DSL and cable.
 ## The network core
 
 The network core is the mesh of packet switches and links that interconnects the internet's end systems.
+
+### Packet Switching
+
+To send a message from a source end system to a destination end system, the source breaks long messages into smaller chunks of data called packets. Each packet travels through communication links and packet switches (routes/link-layer switches).
+
+### Store and Forward Transmission
+
+Most packet switches use store-and-forward transmission at the inputs to the links. Store-and-forward transmission means that the packet switch must receive the entire packet before it can begin to transmit the first bit of the packet. Consider a simple network consisting of two end systems connected by one router. Because the router employs store and forward, the router "buffers" the received bits until it's received all the packet's bits.
