@@ -121,5 +121,88 @@ The first line is the request line (which consists of method, URL and HTTP), and
 - The `Connection` header is the browser telling the server not to bother with persistent connections.
 - There's a number of status codes associated with HTTP requests: 200, 301, 400, 404, 500...
 
-### User-Server Interaction: Cookies
+### Web Caching
 
+A web cache, also called a proxy server, is a network entity that satisfies HTTP requests on the behalf of an origin Web server. A cache has its own disk storage and keeps copies of recently requested objects in this storage. A user's brower can be configued so that the users HTTP requests are first directed to the cache. It might work like this:
+
+1. The browser establishes a connection to the cache, and requests an object.
+2. The cache checks if it has the object stored and returns it if it does.
+3. If it doesn't, the cache opens a TCP connection to the origin server and retrieves the object from there.
+4. When the cahce receives the object, it stores a copy in its local storage and sends a copy back to the browser.
+
+## Email
+
+SMTP is the principal application-layer protocol for email. It uses TCP to reliably send mail from the sender to the receiver. There's also IMAP and POP but it's maybe a bit too recent.
+
+### SMTP
+
+SMTP (RFC 5321) is the heart of email. It predates HTTP (the RFC is from 1982, but SMTP was around before that). Cos of this, it's pretty legacy and has some limitations. Let's look at a flow.
+
+1. Alice invokes her user agent for email, and instructs it to send a message to Bob.
+2. Alice's user agent sends the message to her mail server where it gets placed in a queue.
+3. The client side of SMTP sees this, and opens a TCP connection to Bob's SMTP server.
+4. After some initial handshaking, the SMTP client sends Alice's message into the TCP connection.
+5. At Bob's mail server, the server side of SMTP receives the message and places it in Bob's mailbox where he can read it.
+
+SMTP has similarities with protocols used for face-to-face human interaction.
+
+1. The client SMTP (running on the sending server) has TCP establish a connection to port 25 at the server SMTP. If the server is down, the client will try again later on.
+2. Once there's a connection, the server and client do their handshake. During this handshake, the SMTP server indicates the email address of the sender and email of recipient. Post handshake, the client sends the message.
+3. SMTP relies on the reliability of TCP to transfer the message.
+
+There's a few specific commands that get issued by the client.
+
+- `HELO`
+- `MAIL FROM`
+- `RCPT TO`
+- `DATA`
+- `QUIT`
+
+The server replies to each command with a reply code and some optional English. If the sender has multiple emails, it can send them all at once.
+
+BTW, assignment 3 has you implement the client side of SMTP. Cool.
+
+### Comparison with HTTP
+
+- Both protocols transfer files from one host to another. HTTP transfers files from server to client, and SMTP transfers from server to server.
+- HTTP is a `pull` protocol, someone loads info onto a server and users use HTTP to pull the info. SMTP is a `push` protocol, the sending server pushes the file to the receiving mail server.
+- SMTP requires each message to be in 7-bit ASCII, which HTTP doesn't require.
+- If a document has text and images, HTTP will break this up into individual responses, SMTP does it all in one go.
+
+### Mail Message Formats
+
+Headers for SMTP are included in RFC 5322. As with HTTP, each header contains readable text consisting of a keyword with a colon and value. Some are required, some are optional.
+
+- `From:` (required)
+- `To:` (required)
+- `Subject:` (optional)
+
+
+### Mail Access Protocols
+
+Many people have their email stored on a central server and then use a local user agent to access it, so they can get their email on their computer or phone. A typical flow:
+
+1. Alice's user agent sends an email to her mail server over SMTP
+2. Alice's mail server will use SMTP to send an email to Bob's mail server, where it can then retry the send if it fails.
+3. Bob's mail server receives the email and can send it to Bob's user agent over POP3, IMAP or HTTP.
+4. Bob checks his phone and boom, emails appear.
+
+POP3, IMAP and HTTP are mail access protocols that can be used to speak to the server.
+
+#### POP3
+
+POP3 is quite simple and limited. Once a TCP connection has been established, POP3 progresses through 3 phases:
+
+- Authorization: user agent sends a username and password to authenticate the user.
+- Transaction:  user agent retrieves messages and can mark messages for deletion, remove deletion marks, obtain mail stats. here the user agent issues commands and the server responds to each
+- Update: Occurs after the client issues the `quit` command, where the mail server deletes messages that were marked for deletion.
+
+During a POP3 session, the server maintains some state, namely it keeps track of which user messages have been marked as deleted. However, it doesn't carry state info across POP3 session which means you don't get consistency over multiple user agents, but it does make implementation simpler.
+
+#### IMAP
+
+IMAP is a mail access protocol with many more features, and much greater complexity.
+
+IMAP associates each message with a folder, when a message first arrives at the server it is associated with the recipient's INBOX. The recipient can move the messages around, read, delete etc. IMAP also maintains user state across session, like folder names, which messages are in which folder etc.
+
+## DNS - The Internet's Directory Service
