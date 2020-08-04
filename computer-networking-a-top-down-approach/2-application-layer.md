@@ -206,3 +206,62 @@ IMAP is a mail access protocol with many more features, and much greater complex
 IMAP associates each message with a folder, when a message first arrives at the server it is associated with the recipient's INBOX. The recipient can move the messages around, read, delete etc. IMAP also maintains user state across session, like folder names, which messages are in which folder etc.
 
 ## DNS - The Internet's Directory Service
+
+Just as humans can be identified in many ways, so too can Internet hosts. One identifier is its hostname, like `www.facebook.com`. But these provide little info about the location within the internet of the host. Cos of this, we identify hosts by IP addresses. TL;DR an IP is 4 bytes and has a rigid hierarchical structure. IPs look like 121.7.106.83 which each period separating a byte. It's hierarchical because we can scan for left to right and get more info about where the host is located.
+
+### Services provided by DNS
+
+You can identify a host by a hostname (for humans) or an IP (for routers). To reconcile this, we use a DNS which is a distributed database implemented in a hierarchy of DNS servers and an application-layer protocol that allows hoststo query the distributed database.
+
+DNS also provides a few other services:
+
+- Host aliasing: Hosts with complicated hostnames can have multiple alias names
+- Mail server aliasing: If you're emailing an @yahoo.com email addy, the hostname of Yahoo's email server is more complex than just that. DNS can be invoked by an application to obtain the canonical hostname and IP address. The MX record permits a company's mail server and web server to have identical hostnames.
+- Load distribution: DNS is also used to perform load distribution among replicated servers. For replicated web servers a *set* of IP addresses are associated with one hostname. DNS will respond to requests with one of those IPs and rotate them around. In saying this, I don't think this is what you'd use in 2020. You'd probably lean towards something like nginx or Envoy Proxy.
+
+### Overview of how DNS works
+
+We focus on the hostname-to-IP-address translation service.
+
+- An app (like a web browser) running in a user's host needs to translate a hostname to an IP. The app invokes the client side of DNS , specifying the hostname that needs to be translated.
+- DNS in the user's host takes over and sends a query into the network. All DNS query and reply message are sent with UDP datagrams to port 53. It will eventually receive a reply that provides the desired mapping which gets passed to the invoking application. To the app, DNS is a black box.
+- This black box is complex tho, consisting of a large number of DNS servers around the globe and an app-layer protocl that specifies how the DNS servers and querying hosts communicate.
+
+A simple design consists of one DNS server, where clients simply direct all queries to the one server. This is bad tho cos it's a single point of failure, gets high traffic volume, can't be physically close to all querying clients, and would need to be constantly updated.
+
+#### A distributed, hierarchical DB
+
+DNS uses a large number of servers organised hierarchically and distributed globally to deal with the issue of scale.
+
+There's three approximations of DNS servers:
+- Root DNS servers. There are 400+ of these around the world, Australia has 16 of them!
+- Top level domain (TLD) DNS servers (com, org, edu...). For each of the TLDs, there's a TLD server (or cluster) and this is maintained by a company. For `com` for example, a company called Verisign Global Registry Services maintains it.
+- Authoritative servers (facebook.com, amazon.com, pbs.org...). Every org with publicly accessible hosts must provide publicly accessible DNS records that map these hostnames to IPs.
+- Local DNS server. This doesnt strictly belong to the hierarchy but is central to DNS arch. Each ISP has a local DNS server. When a host connects to an ISP, the ISP provides the host with the IP addresses of one or more of its local DNS servers. 
+
+When you try to access amazon.com, your browser contacts the root server, which returns the IP for a TLD server for com. You then contact this and you receive the authoritative server for amazon.com, which returns the IP for the hostname www.amazon.com
+
+#### DNS Caching
+
+DNS uses caching to improve perf, and reduce the number of DNS messages. In a query chain, when a DNS server receives a reply it can cache the mapping in its memory so it can give this info for other requests. This info will usually be invalidated after a period of time.
+
+### DNS Records and Messages
+
+DNS servers store resource records (RRs). Each DNS reply carries one or more RRs. An RR is a four-tuple containing these fields:
+
+`(Name, Value, Type, TTL)`
+
+TTL is time to live, determining when a resource should be removed from a cache
+
+- If `Type=A` then `Name` is a hostname, and `Value` is it's IP. Therefore a Type A record provides standard hostname-to-IP mapping, like
+`(relay1.bar.foo.com, 145.37.93.126, A, 0)`
+- If `Type=NS` then `Name` is a domain (foo.com) and `Value` is the hostname of an authoritative DNS server that knows how to obtain the IP for hosts in the domain. This is used to route DNS queries further along in the query chain.
+`(foo.com, dns.foo.com, NS, 0)`
+- If `Type=CNAME` then `Value` is a canonical hostname for the alias hostname `Name`. This record can provide querying hosts the canonical name for a hostname.
+`(foo.com, relay1.bar.foo.com, CNAME, 0)`
+- If `Type=MX`, `Value` is the canonical name of a mail server that has an alias hostname `Name`.
+`(foo.com, mail.bar.foo.com, MX, 0)`. MX records allow the hostnames of mail servers to have simple aliases. This also allows a company to have the same aliased name for its mail server and for one of its other servers.
+
+If the DNS server is authoritative for a hostname, the DNS server will contain a Type A record for the hostname. If it's not authoritative, the server will contain a Type NS record.
+
+### DNS Messages
