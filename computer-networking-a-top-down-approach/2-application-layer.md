@@ -264,4 +264,35 @@ TTL is time to live, determining when a resource should be removed from a cache
 
 If the DNS server is authoritative for a hostname, the DNS server will contain a Type A record for the hostname. If it's not authoritative, the server will contain a Type NS record.
 
-### DNS Messages
+## P2P File Distribution
+
+With P2P architectures, there's minimal (or no) reliance on always-on infra servers. Instead pairs of intermittently connected hosts (peers) communicate directly with each other. They're not owned by a service provider, but are computers controlled by users.
+
+As of 2016, the most popular P2P protocol is BitTorrent.
+
+P2P is super scalable.
+
+## Video Streaming and CDNs
+
+### Internet Video
+
+Prerecorded videos are placed on servers and users send requests to the servers to view the videos on demand. Video content can be compressed by trading video quality with bit rate.
+
+From a networking perspective, the most important characteristic of video is its high bit rate. This ranges from like 100kbps to 10Mbps
+
+### HTTP Streaming and DASH
+
+In HTTP streaming, the video is stored on a server as a file with a specific URL. The server then sends the video file. On the client side, the bytes are collected in a buffer. Once the number of bytes in this buffer exceeds a threshold the client begins playback. HTTP streaming's biggest shortcoming is that all clients receive the same encoding of the video which has led to a new type of streaming called Dynamic Adaptive Streaming over HTTP (DASH). In DASH, the video is encoded into several different versions with diff bit rates. The client dynamically requests chunks of video segments of a few seconds in length. When the amount of bandwidth is high, the client grabs chunks from the high-rate version and vice versa.
+
+### CDNs
+
+For an internet video company, the most straightforward way to provide streaming is to build one huge data center, store everything there and then stream them from here to the clients. But there's 3 probs:
+
+1. If the client is far away, packets from the server go through many links and it takes ages. If a link provides a throughput less than video consumption rate, the user will get lots of delays.
+2. A popular video will likely be sent many times over tge same links, wasting bandwidth and also network costs to the ISP
+3. A single data center represents a single point of failure.
+
+To distribute lots of video data, companies use CDNs. A CDN manages servers in multiple geographically distributed locations, stores copies of the videos and other content in its servers, and attempts to direct each user request to a CDN location that'll give the best experience. Some companies own and operate their own CDN (like Google), other times 3rd parties do this (like Akamai, Limelight, AWS Cloudfront, Cloudflare). CDNs usually do one of two server placement philosophies:
+
+1. Enter Deep into the access networks of ISPs by deploying server clusters in access ISPs around the world. Akamai does this approach with clusters in ~1700 locations with the goal of getting close to end users.
+2. Bring home, by bringing ISPs home by building large clusters at a smaller number of sites. These CDNs typically place their clusters in Internet Exchange Points (IXPs). This is usually a bit cheaper and easier to manage, but often with higher delay and lower throughput.
