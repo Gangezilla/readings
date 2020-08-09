@@ -296,3 +296,5 @@ To distribute lots of video data, companies use CDNs. A CDN manages servers in m
 
 1. Enter Deep into the access networks of ISPs by deploying server clusters in access ISPs around the world. Akamai does this approach with clusters in ~1700 locations with the goal of getting close to end users.
 2. Bring home, by bringing ISPs home by building large clusters at a smaller number of sites. These CDNs typically place their clusters in Internet Exchange Points (IXPs). This is usually a bit cheaper and easier to manage, but often with higher delay and lower throughput.
+
+Up to p188
