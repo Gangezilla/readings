@@ -32,4 +32,10 @@ Your job as an architect is to align with where the company is going. The key is
 
 When you're working on practices and trade-offs, it's important to define what a good service looks like. "It needs to be a cohesive system made of many small parts with autonomous lifecycles but all coming together"
 
-### Monitoring
+Try to standardise on things like monitoring, interfaces, versioning of end points...
+
+## Governance through code
+
+Having **exemplars** which are great examples you can point to to show off what best practices look like, is really helpful. Documentation is good, but code is really useful too. Having a running service lets people imitate the better pieces.
+
+You can also establish a template that can be run to set up a service in a good way.

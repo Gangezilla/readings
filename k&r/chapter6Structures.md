@@ -1,3 +1,0 @@
-# Structures
-
-## Basics of Structures
