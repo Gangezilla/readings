@@ -25,3 +25,8 @@
 ### Modules and Services
 
 By thinking carefully about what should and should not be shared, we can avoid one of the pitfalls that leads to tight coupling, and we have identified a boundary where we have high cohesion.
+
+## Business Capabilities
+
+When you think about the bounded contexts that exist in your org, you should be thinking not in terms of data that's shared, but about the capabilities those contexts provide the rest of the domain.
+
