@@ -118,3 +118,53 @@ Lab 1:
 
 ### Blind SQL injection vulnerabilities
 
+A blind SQL injection means the app doesn't return the results of the SQL query or the details of any database errors in its responses. You can still exploit these, but they're more complex. Following techniques:
+
+- Change logic of the query to trigger a detectable difference depending on the truth of a single condition. This might be injecting a new condition into some boolean logic, or triggering an error.
+- You can conditionally trigger a time delay in the processing of the query, allowing you to infer the truth of the condition based on the time the app takes to respond.
+- You can trigger an out of band network interaction with [OAST](https://portswigger.net/burp/application-security-testing/oast) techniques.
+
+With blind SQL injection, techniques like `UNION` attacks arent effective because they rely on being able to see the results.
+
+#### Exploiting blind SQL injection by triggering conditional responses
+
+Consider an app using tracking cookies. Requests include a header like `Cookie: TrackingId=ioinoiwnereiowerowe2`. The app determines if this is a known user with a query like: `SELECT trackingID FROM TrackedUsers WHERE trackingID = 'xxx'`.
+
+This query is vulnerable to SQL injection, but you won't see the results. If it returns data then a 'welcome' message is displayed. This behaviour can be exploited.
+
+Suppose you sent two values:
+```SQL
+xyz' UNION SELECT 'a' WHERE 1=1--
+xyz' UNION SELECT 'a' WHERE 1=2--
+```
+
+The first of these will give results, displaying the 'welcome' message. This lets us extract data one bit at a time. Suppose we have a `Users` table with `Username` and `Password`. We can systematically determine the password by sending a series of inputs like:
+
+`xyz' UNION SELECT 'a' FROM Users WHERE Username = 'Administrator' and SUBSTRING(Password, 1, 1) > 'm' --` if we get the welcome screen, we know the first char is above 'm'. We can eventually repeat that to get to `SUBSTRING(Password, 1, 1) = 's'`.
+
+### Detecting SQL injection vulnerabilities
+
+Using Burp Suite's web vulnerability scanner. But if you're poor like me, it often involves manual searching involving:
+
+- Submitting the single quote character `'` and looking for errors or anomalies.
+- Submitting some SQL specific syntax that evaluates to the the base value of the entry point and looking for differences.
+- Submitting boolean conditions like `OR 1=1` and `OR 1=2` and looking for differences
+- Submitting payloads designed to trigger time delays when executed within an SQL query and looking for differences in the time taken to respond.
+- Submitting payloads designed to trigger time delays and looking for differences in the time taken to respond.
+
+### SQL injection in different parts of the query
+
+Most vulns are in the `WHERE` clause, but it can occur in other spots too.
+
+- In `UPDATE` statements in the updated values or `WHERE` clause.
+- In `INSERT` statements within the inserted values.
+- In `SELECT` statements within the table or column name.
+- In `SELECT` statements in the `ORDER BY` clause.
+
+### Second-order SQL injection
+
+First-order SQL injection is where the app takes user input from a HTTP request and then unsafely uses that in an SQL query.
+
+In second-order SQL injection (or stored SQL injection), the app saves user input for later. When handling a different HTTP request, the app retrieves the stored data and incorporates it into an SQL query unsafely.
+
+<https://portswigger.net/web-security/sql-injection/cheat-sheet>

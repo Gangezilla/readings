@@ -12,3 +12,13 @@ When a principal tries to access a resouce, they're directed to authenticate wit
 
 With microservices, you'll use a gateway as a proxy which sits between your services and the outside world. THis acts as a centralized place for behaviour around performing the auth handshake and redirecting.
 
+## Defense in depth
+
+### Firewalls
+
+Multiple firewalls, simple and sophisticated. Simple to restrict access to certain traffic on certain ports. Sophisticated to throttle connections from certain IP ranges. It's valuable to have multiple firewalls.
+
+### Logging
+
+Good logging is not about prevention but can help with detection and recovery. Be careful about storing sensitive info in your logs tho.
+
