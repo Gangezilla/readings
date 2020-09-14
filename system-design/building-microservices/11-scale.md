@@ -22,5 +22,6 @@ An essential part of building a resilient system is to safely degrade functional
 
 With a monolith, system health is binary. With microservices we need to be more nuanced. If a shopping cart is down, we might still allow someone to browse or check stock.
 
-## Architecural Safety Measures
+## CAP Theorem
 
+Consistency, availability and partition tolerance. 
