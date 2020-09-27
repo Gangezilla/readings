@@ -81,3 +81,37 @@ However, the mean isn't a very good metric if you want to know your "typical" re
 High percentiles, or *tail latencies* are important because they directly affect user's experience of the service. Percentiles are often used in *service level objectives* and *service level agreements* (SLOs and SLAs) which are contracts that define the expected perf and availability of a service.
 
 ### Approaches for coping with load
+
+An architecture thats appropriate for one level of load is unlikely to cope with 10 times that load. It's likely that you'll have to rethink your architecture on every magnitude load increase.
+
+- *Scaling up/vertical scaling* means to move to a more powerful machine
+- *Scaling out/horizontal scaling* means to distribute the load across multiple shared machines.
+- Distributing load across multiple machines is also known as a shared-nothing service.
+- *Elastic* systems are ones that can automatically add resources when they detect a load increase. This can be useful if load is highly unpredictable.
+
+Distributing stateless systems is pretty easy, but stateful data systems can introduce a lot of complexity. The architecture of systems that operate at scale is usually highly specific to the app. The problem may be the volume of reads, the volume of writes, the volume of data, the complexity of the data, response time requirements.
+
+## Maintainability
+
+### Operability
+
+Make it easy for operations teams to keep the system running smoothly. Operations teams are vital to keep software running smoothly, and are usually responsible for the following and more:
+
+- Monitoring the health of the system and quickly restoring service if it goes bad.
+- Tracking down the cause of problems, such as system failures or degraded performance.
+- Keeping everything updated
+- Keeping tabs on how diff systems affect each other
+- Establishing good practices and tools for deployment.
+- Performing complex tasks, like moving an app from one platform to another.
+- Maintaining security
+- Preserving organisational knowledge about the system, even through individuals
+
+### Simplicity
+
+Make it easy for new engineers to understand the system, by removing as much complexity as possible from the system.
+
+One of the best tools we have for removing accidental complexity is abstraction. A good abstraction can hide implementation behind a clean facade. Good abstractions can be used in a number of places. For example, programming languages hide machine code, CPU registers and system calls.
+
+### Evolvability
+
+Make it easy for engineers to make changes to the system in the future. The ease with which you can modify a data system and adapt it to changing requirements is closely linked to its simplicity and its abstractions: simple and easy-to-understand systems are usually easier to modify than complex ones.
