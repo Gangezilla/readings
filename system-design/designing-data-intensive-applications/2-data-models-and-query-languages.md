@@ -24,3 +24,7 @@ In OOP languages, relational DBs present a problem because a series of tuples of
 
 Removing duplication in databases is called *normalization*. Normalization requires *many-to-one* relationships. Some data structures that initially seem to fit into a join-free document model don't work as well when more complex features need to get added.
 
+## Graph-Like Data Models
+
+Graphs consist of *vertices* and *edges*. Well known algos can operate on these graphs for example, car nav systems search for the shortest path between two points in a road network.
+
