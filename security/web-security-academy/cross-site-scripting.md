@@ -24,7 +24,7 @@ Lab 1: `?search=<script>alert(1)</script>`
 
 ### Impact of reflected XSS
 
-If an attacker can control a script in a victim's browser, they can typically fully compromise them. The attacker can:
+If an attacker can control a script in a victim's browser, they can typically fully compromise them. **The** attacker can:
 
 - Perform any action within the app that the user can perform.
 - View any info that the user is able to view.
