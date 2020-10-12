@@ -30,6 +30,10 @@ A scope is the range within a program for which an item is valid. The variable i
 
 We're gonna use `String` as an example because it's stored on the heap. Rust has string literals which we used earlier, but also a `String` type. The `String` type is useful for when we need to create a string during the running of a program, like taking user input. This is allocated on the heap and as such stores an amount of text thats unknown at compile time. You'd do this like so: `let s = String::from("hello");` This kind of string can be mutated, whereas the string literal cannot. This is due to how memory is dealt with.
 
+TLDR:
+
+`&str` is an immutable pointer to a string somewhere in memory, whereas the `String` type stores a heap-allocated string that you're allowed to mutate.
+
 ## Memory and Allocation
 
 With a string literal, we know its contents at compile time so the text is hardcoded directly into the final executable. With the `String` type, we allocate some memory on the heap to accomodate a dynamic, changing value. This means that:
