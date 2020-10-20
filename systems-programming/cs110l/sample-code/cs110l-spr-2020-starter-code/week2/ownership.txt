@@ -11,6 +11,8 @@ fn main() {
 ```
 
 
+This doesn't compile because a borrow of `s` occurs in the assignment to `ref1`, which means that when we try to assign to it later on we get an error.
+
 
 Example 2:
 ```
@@ -19,6 +21,8 @@ fn drip_drop() -> &String {
     return &s;
 }
 ```
+
+I _think_ this won't compile because when that function is finished executing, the Rust compiler won't know when it's appropriate to drop `s`. This means this bit of code is not memory safe and won't compile. Also, more simple, because the borrowed value is not owned we can't do it.
 
 
 
@@ -32,3 +36,5 @@ fn main() {
     println!("{}", s2);
 }
 ```
+
+This doesn't compile because int he assignment to s2 we're moving ownership of that string from the vector to the string. This doesn't make sense because the vector would lose it's element.

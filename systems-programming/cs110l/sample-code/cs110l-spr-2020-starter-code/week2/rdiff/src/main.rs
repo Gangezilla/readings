@@ -7,10 +7,22 @@ use std::process;
 pub mod grid;
 
 /// Reads the file at the supplied path, and returns a vector of strings.
-#[allow(unused)] // TODO: delete this line when you implement this function
 fn read_file_lines(filename: &String) -> Result<Vec<String>, io::Error> {
-    unimplemented!();
-    // Be sure to delete the #[allow(unused)] line above
+    let mut lines = Vec::new();
+    let file = match File::open(filename) {
+        Ok(file) => file,
+        Err(err) => return Err(err),
+    };
+
+    for line in io::BufReader::new(file).lines() {
+        let line_str = match line {
+            Ok(text) => lines.push(text),
+            Err(err) => return Err(err),
+        };
+    }
+    // let tup: (i32, f64, u8) = (500, 6.4, 1);
+    let return_value: (Vec<String>, io::Error) = (lines, io::Error::new());
+    return return_value;
 }
 
 #[allow(unused)] // TODO: delete this line when you implement this function
