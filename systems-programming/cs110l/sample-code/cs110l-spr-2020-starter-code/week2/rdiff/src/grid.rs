@@ -22,6 +22,12 @@ impl Grid {
         (self.num_rows, self.num_cols)
     }
 
+    pub fn is_valid_position(&self, row: usize, col: usize) -> bool {
+        let is_invalid_row = !row > self.num_rows - 1;
+        let is_invalid_column = !col > self.num_cols - 1;
+        return is_invalid_row && is_invalid_column
+    }
+
     /// Returns the element at the specified location. If the location is out of bounds, returns
     /// None.
     ///
@@ -30,19 +36,26 @@ impl Grid {
     /// but others argue that makes code needlessly complex. Here, we decided to return Option to
     /// give you more practice with Option :) and because this similar library returns Option:
     /// https://docs.rs/array2d/0.2.1/array2d/struct.Array2D.html
-    #[allow(unused)] // TODO: delete this line when you implement this function
     pub fn get(&self, row: usize, col: usize) -> Option<usize> {
-        unimplemented!();
-        // Be sure to delete the #[allow(unused)] line above
+        // let is_invalid_row = !row > self.num_rows - 1;
+        // let is_invalid_column = !col > self.num_cols - 1;
+        if self.is_valid_position(row, col) {
+            Some(self.elems[(row * self.num_cols) + col])
+        } else {
+            None
+        }
     }
 
     /// Sets the element at the specified location to the specified value. If the location is out
     /// of bounds, returns Err with an error message.
-    #[allow(unused)] // TODO: delete this line when you implement this function
     pub fn set(&mut self, row: usize, col: usize, val: usize) -> Result<(), &'static str> {
-        unimplemented!();
-        // Be sure to delete the #[allow(unused)] line above
-    }
+        if self.is_valid_position(row, col) {
+            self.elems[(row * self.num_cols) + col] = val;
+            Ok(())
+        } else {
+            Err("Invalid grid position")
+        }
+    } 
 
     /// Prints a visual representation of the grid. You can use this for debugging.
     pub fn display(&self) {

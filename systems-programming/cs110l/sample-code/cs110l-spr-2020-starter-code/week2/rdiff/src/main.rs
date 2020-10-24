@@ -15,14 +15,12 @@ fn read_file_lines(filename: &String) -> Result<Vec<String>, io::Error> {
     };
 
     for line in io::BufReader::new(file).lines() {
-        let line_str = match line {
+        match line {
             Ok(text) => lines.push(text),
             Err(err) => return Err(err),
         };
     }
-    // let tup: (i32, f64, u8) = (500, 6.4, 1);
-    let return_value: (Vec<String>, io::Error) = (lines, io::Error::new());
-    return return_value;
+    Ok(lines)
 }
 
 #[allow(unused)] // TODO: delete this line when you implement this function
