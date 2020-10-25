@@ -25,7 +25,7 @@ impl Grid {
     pub fn is_valid_position(&self, row: usize, col: usize) -> bool {
         let is_invalid_row = !row > self.num_rows - 1;
         let is_invalid_column = !col > self.num_cols - 1;
-        return is_invalid_row && is_invalid_column
+        return is_invalid_row && is_invalid_column;
     }
 
     /// Returns the element at the specified location. If the location is out of bounds, returns
@@ -55,7 +55,7 @@ impl Grid {
         } else {
             Err("Invalid grid position")
         }
-    } 
+    }
 
     /// Prints a visual representation of the grid. You can use this for debugging.
     pub fn display(&self) {
