@@ -20,7 +20,7 @@ int main(void) {
   // To set GPIO16 we need to set bits 20-18 to 001
   // 0b0000'0000'0000'0000'0100'0000'0000'0000'0000' = 0x40000
   //      └32  └28  └24  └20  └16  └12  └8   └ 4  └ 0
-  *GPIO_FSEL1 += 0b001 << 18;
+  *GPIO_FSEL1 = 0b001 << 18;
   // we left shift 1 18 spots from 0 to 17 to set the correct value
   
   // STEP 2: Continuously set and clear GPIO 16.

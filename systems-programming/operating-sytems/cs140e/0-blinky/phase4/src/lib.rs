@@ -30,5 +30,4 @@ pub unsafe extern "C" fn kmain() {
     GPIO_CLR0.write_volatile(0b1 << gpio_16);
     spin_sleep_ms(1 * 1000);
   }
-    // FIXME: STEP 2: Continuously set and clear GPIO 16.
 }
