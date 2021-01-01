@@ -66,3 +66,5 @@ The new tokens we'll be adding (==, !, !=, -, /, *, <, > and the keywords true, 
 Some of the code in the tests looks like nonsense which is ok. The lexer's job is not to tell us if code works or make sense, it only needs to turn input into tokens.
 
 To handle `==` and `!=` we can extend our branches that look for the `=` and `!` chars and "peek" forward in the input we've been given.
+
+## Start of a REPL
