@@ -42,5 +42,23 @@ The first thing `ParseProgram` does is construct the root node of the AST and th
 
 ### Parsing expressions
 
-Parsing statements (let and return) are both pretty easy. Expressions are a bit harder, for example, an expression like `5 * 5 + 10` needs to communicate operator precedence
+Parsing statements (let and return) are both pretty easy. Expressions are a bit harder, for example, an expression like `5 * 5 + 10` needs to communicate operator precedence. Theres other stuff too meaning that the validity of a token's position now depends on the context, the tokens that come before and after, and their precedence.
 
+In Monkey, everything besides `let` and `return` is an expression. These can be:
+
+- prefix like `-5`, `!true` and `!false`
+- Infix like `5 + 5`, `5 - 5`
+- Comparison operators `foo == bar`, `foo != bar`, `foo < bar`
+- Using parentheses to group like `5 * (5 + 5)`
+- Call expressions like functions `add(2, 3)`
+- Identifiers `foo * bar / foobar`
+
+There's a bunch of things here, and we will start using what's called...
+
+### Top Down Operator Precedence
+
+A guy called Vaughan Pratt wrote a paper in 1973 that describes Top Down Operator Precedence Parsing, or Pratt parsing. TLDR: it describes parsing functions with single token types, and these token types can have two parsing functions which allows us to handle infix AND prefix token positions.
+
+- Prefix operators go before `--5` an operand. The operator is `--` and the operand is the integer literal `5`.
+- Postfix operators look like this `5++` where the operator is `++` and the operand is `5`. We won't have postfix operators in Monkey.
+- Infix operators are 

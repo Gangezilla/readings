@@ -1,6 +1,7 @@
 # The Web in Depth
 
 ## Requests
+
 - Method: GET/POST/DELETE...
 - Host
 - Accept: Indicates what MIME types are accepted
@@ -9,6 +10,7 @@
 - Authorization: Used for basic auth pages (mainly). Takes the form "Basic <base64'd username:password>
 
 ## Cookies
+
 Key value pairs, stored on the client for a fixed period of time. Each cookie has a domain pattern that it applies to and they're passed with each request the client makes to matching hosts.
 
 It's bad if Cookie A goes to server B and viceversa.
@@ -17,6 +19,7 @@ Cookies added for .example.com can be ready by any subdomain of example.com. A c
 
 Set-cookie
 There's two important flags to know for cookies.
+
 - Secure: Will only work on HTTPS pages.
 - HTTPOnly: The cookie cannot be read by JS, can only be sent up with web requests. Usually you could use document.cookie to read and manipulate. But with HTTPOnly you can't do this.
 
@@ -27,6 +30,7 @@ HTML should be parsed according to the relevant spec, generally HTML5 now. It's 
 Canonical example is injecting `<script/xss...>` and it gets parsed.
 
 Browsers are built to handle the web, and they have lots of legacy parsing. HTML5 has specifics on how that legacy parsing should happen. 
+
 - A `<script>` tag on its own will automatically be closed at the end of the page. This can be used in a URL where you can't get a slash in there.
 - A tag missing its closing angle bracket will automatically be closed. Having an open angle tag inside of another tag is valid and will throw off old firewalls. An old trick was to wrap script tags in another tag to get your script parsed.
 
@@ -62,6 +66,7 @@ SOP is what domains you can contact via AJAX requests, access to the DOM across 
 - Domain names must be an exact match, no wildcarding or subdomain walking
 
 ### SOP Loosening
+
 It's possible for devs to loosen the grip of SOP by changing document.domain, posting messages between windows and using CORS. You can always call postMessage into an IFrame. When you do see message handling, its often wrong. Used a lot to break Chrome extensions, they use `window.postMessage`. 
 
 There's usually no good reason to loosen SOP. There's a design problem if you do.
