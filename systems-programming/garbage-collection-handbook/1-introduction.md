@@ -43,7 +43,47 @@ It's impossible to have a "best" collector, but we can compare them based on a f
 - Safety: Prime consideration is a GC should be *safe*, meaning it never reclaims the storage of live objects. This does come at a perf cost though.
 - Throughput: Overall time spent in GC
 - Completeness and promptess: *Complete* being all garbage in the heap should be reclaimed, *promptness* being the number of GC cycles required to do this in.
-- Pause time: 
+- Pause time: Pauses are introduced by collectors into a program's execution because they stop all mutator threads while collecting garbage, minimising these pauses is pretty desirable.
+- Space overhead: Different memory managers impose different space overheads
+
+## A performance disadvantage?
+
+The cost of automatic dynamic memory management is dependent o app behaviour and hardware. Automatic memory management does have a perf overhead, but it's not as much as is commonly assumed. Manual memory management imposes a significant cost too. A study found that garbage collectors could match manual memory management if given sufficient heap size (5x minimum), for more typical heap sizes the GC overhead increased to 17%.
+
+## Terminology and notation
+
+### The heap
+
+The heap is memory words that can be contiguous or not. A *granule* is the smallest unit of allocation, tpyically a word or double word, a *chunk* is a contiguous group of granules, a *cell* is a smaller contiguous group of graunles and may be allocated, free, wasted or unusable.
+
+An *object* is a cell allocated for use by the application, usually assumed to be a contiguous array of addressable bytes or words......
+
+### Mutator and collector
+
+A GC program is divided into two parts:
+
+1. The *mutator* executes app code which allocates new objects and mutates the object graph by changing reference fields so they refer to different destination objects. These can be in heap objects as well as *roots*, like static variables, thread stacks.
+2. Collector executes GC code which discovers unreachable objects and reclaims their storage.
+
+### MUtator roots
+
+This represents some pointers held in storage that's directly accessible to the mutator without going through other objects.
+
+### References, fields and addresses
+
+We refer to a heap node by its memory address
+
+### Liveness, correctness and reachability.
+
+An object is said to be live if it will be accessed at some time in the future execution of the mutator. A GC is correct only if it never reclaims live objects, but, liveness is an undecidable property of programs. We can approximate liveness by *pointer reachability*, meaning an object is *reachable* if it can be reached by following a chain of pointers.
+
+### The allocator
+
+The heap allocator, which is orthogonal to the collector, allocates and frees memory.
+
+### Mutator, read and write operations
+
+
 
 **Questions**
 
