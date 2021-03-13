@@ -59,6 +59,26 @@ There's a bunch of things here, and we will start using what's called...
 
 A guy called Vaughan Pratt wrote a paper in 1973 that describes Top Down Operator Precedence Parsing, or Pratt parsing. TLDR: it describes parsing functions with single token types, and these token types can have two parsing functions which allows us to handle infix AND prefix token positions.
 
-- Prefix operators go before `--5` an operand. The operator is `--` and the operand is the integer literal `5`.
-- Postfix operators look like this `5++` where the operator is `++` and the operand is `5`. We won't have postfix operators in Monkey.
-- Infix operators are 
+- **Prefix operators** go before `--5` an operand. The operator is `--` and the operand is the integer literal `5`.
+- **Postfix operators** look like this `5++` where the operator is `++` and the operand is `5`. We won't have postfix operators in Monkey.
+- **Infix operators** sit in between operands, like this `5 * 8`. These appare in binary expressions, which have two operands. This touches on something called operator precedence, or order of operations.
+
+We need to add a new type of statement to the AST, an expression statement that looks like `x + 10;`.
+
+### Implementing the Pratt Parser
+
+A Pratt parser's main idea is the association of parsing cuntion with token types. Whenever this token type is encountered, the parsing functions are called to parse the appropriate expression and return an AST node that represents it.
+
+`prefixParseFn` and `infixParseFn`. `prefix...` gets called when we encounter the associated token type in prefix position and `infix...` gets called when we encounter the token type in infix position.
+
+We'll start with identifiers, which are simple and can look like `x;`, but also exist as arguments in function calls, operands in infix expressions and stand alone as part of conditionals.
+
+Our `parse...Statements` follow the pattern of building the AST node and then trying to fill its fields by calling other parsing functions.
+
+We can use the `iota` keyword to give the following constants incrementing numbers as values, starting at 0. The `_` blank identifier takes the zero value and the following constants get assigned values 1 to 7. The numbers don't matter, but the order and relation to the others do.
+
+We've modified the `New` function to initalise the `prefixParseFns` map on Parser and register a parsing function so that if we encounter a token of type `token.IDENT` we call `parseIdentifier`.
+
+### Integer Literals
+
+Integer literals look like `5;` but are in a number of places, `let x = 5;` `add(5, 10)`
