@@ -82,3 +82,7 @@ We've modified the `New` function to initalise the `prefixParseFns` map on Parse
 ### Integer Literals
 
 Integer literals look like `5;` but are in a number of places, `let x = 5;` `add(5, 10)`
+
+### Prefix Operators
+
+Two prefix operators, `!` and `-`. Any expression can follow a prefix operator
