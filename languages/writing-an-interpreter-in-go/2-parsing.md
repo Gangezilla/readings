@@ -86,3 +86,10 @@ Integer literals look like `5;` but are in a number of places, `let x = 5;` `add
 ### Prefix Operators
 
 Two prefix operators, `!` and `-`. Any expression can follow a prefix operator
+
+### Infix Operators
+
+Infix operators have an expression on the left and right.
+
+## How Pratt Parsing works
+
