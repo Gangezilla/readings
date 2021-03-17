@@ -36,7 +36,6 @@ I want to be able to introduce somebody (like me) to the concept of garbage coll
   - This will mostly be discussing the mark sweep algorithm, point out that mark-sweep is an *indirect collection* algo, so it doesn't detect garbage, but identifies live objects and then concludes that what's left must be garbage.
   - Explain how tricolor works.
   - Explain why Golang picked this.
-  - Talk about how Go defragments the heap, explain what defragmentation is why its a problem how Go avoids it etc. note: you dont know this yet, so figure it out lol.
 - Find the point in the source code where the GC is terminated when the program is and say what happens when it is (i imagine we just bin the heap, but confirm this...)
 - Wrap up, i guess...
 
@@ -91,33 +90,51 @@ ADD IMAGE OF PREVIOUS HEAP HAVING AN OBJECT BE CUT OFF. LIKE, ARROW GOING FROM O
 
 The garbage collector used by Go is a **non-generational concurrent, tri-color mark and sweep garbage collector**. 
 
-Generational garbage collectors work off the assumption that most memory reclamations are made on short lived objects such as temporary variables, therefore it makes sense to spend more time looking at recently allocated objects. However, because Go prefers to allocate memory on the stack, Go generally has a larger proportion of objects that don't get placed on the heap so it doesn't need to rely on generational garbage collection. <https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU>  Concurrent means that it runs simultaneously with mutator threads <link to mgc.go goes here>. Therefore it is a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the way that mark and sweep is implemented.
+Generational garbage collectors work off the assumption that most memory reclamations are made on short lived objects such as temporary variables, therefore it makes sense to spend more time looking at recently allocated objects. However, because Go prefers to allocate memory on the stack, Go generally has a larger proportion of objects that don't get placed on the heap so it doesn't need to rely on generational garbage collection. <https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU>  Concurrent means that the collector runs at the same time with mutator threads <link to mgc.go goes here>. Therefore, it is a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the way that mark and sweep is implemented.
 
-A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. The mark phase has the collector traversing the graph of objects stored in the heap and marking objects that are no longer needed, and the sweep phase consists of removing objects that have been marked for removal. 
+A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. The mark phase has the collector traversing the graph of objects stored in the heap and marking objects that are no longer needed, and the sweep phase consists of removing objects that have been marked for removal.
 
-- tri-color: the algorithm used to implement mark and sweep behaviour.
-- mark and sweep: the type of garbage collection
+The mark phase scans the heap to figure out which objects are needed by the application and which can be collected. But as we've previously established the Go garbage collector is **concurrent**. This means that the collector is running at the same time as the mutator so that new information could be added to the heap as the collector is running. This is bad because we could lose data integrity on the heap. To prevent this a **write barrier** is turned on. The write barrier prevents any more information being added to the heap by stopping the program for a short while. This is called **stop the world** time, and it is the first of two times that the collector stops the world.
 
-- Go uses a non-generational concurrent, tri-color mark and sweep garbage collector. break these terms down. one paragraph for all except tri-color mark and sweep.
-- explain tri colour mark and sweep, make some diagrams too
+*We assume each mutator thread is stopped at a place where it's safe for the collcetor to examine its memory.*
+*Stopping the world gives us a snapshot of the heap, so we don't have to worry about mutators rearranging the topology of objects while the collector is trying to determine which objects are live.*
+
+At this point the mark phase can begin the actual work of marking heap objects that are still being used. It does this by implementing a **tri-color algorithm**. When marking begins, all objects are considered white except for the root objects which are colored grey.
+
+PICTURE OF WHITE WITH GREY ROOTS
+
+The collector will traverse through the heap and color everything that it comes across as grey.
+
+PICTURE OF SOME GREY NODES AND SOME WHITE NODES
+
+The grey objects are then queued up to be turned black.
+
+PICTURE OF GREY NODES TURNING BLACK
+
+The collector will then stop the world again and clean up all the white nodes that are no longer needed.
+
+PICTURE OF WHITE NODES BEING COLLECTED
+
+Why did Go pick this?
+
+https://blog.golang.org/ismmkeynote
+
+Conclusion...
 
 pointers point to data allocated on the heap
 
 - Stack and heap, GC works by managing the heap.
-- There's a number of GC algorithms that are compared in a few categories. Go uses a GC algorithm called a **tricolor mark and sweep** algorithm.
-- To be specific, Go uses a non-generational concurrent, tri-color mark and sweep garbage collector. We've already talked about the tricolor bit, explain non-generational concurrent.
 - explain that a GC program is divided into two parts, mutator and collector, point to where in the Go code these are defined.
 - Talk about what actually happens when the GC is running, bonus points if you can point to the place in the code where GC begins and is managed from.
   - Stop the world, write barrier, stopping every running goroutine.
   - This will mostly be discussing the mark sweep algorithm, point out that mark-sweep is an *indirect collection* algo, so it doesn't detect garbage, but identifies live objects and then concludes that what's left must be garbage.
   - Explain how tricolor works.
   - Explain why Golang picked this.
-  - Talk about how Go defragments the heap, explain what defragmentation is why its a problem how Go avoids it etc. note: you dont know this yet, so figure it out lol.
-- Find the point in the source code where the GC is terminated when the program is and say what happens when it is (i imagine we just bin the heap, but confirm this...)
 
 ## References
 
 https://golang.org/doc/faq#stack_or_heap
+https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976
 
 ## Part 2
 
