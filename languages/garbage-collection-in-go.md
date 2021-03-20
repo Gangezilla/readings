@@ -57,22 +57,24 @@ This is why many programmers use languages, like Go, that offer **automatic dyna
 
 Garbage collection does have a performance overhead, but it isn't as much as is commonly assumed. This means that programmers can spend more time writing the business logic of their programs and ensuring that it meets the needs of the end user.
 
-Garbage collection operates on the heap not the stack. The heap and the stack are two locations in memory where data is stored by a running program. The stack generally refers to the call stack of a thread, which is a data structure that stores values as they're defined in a function. Each function call pushes a new frame onto the stack, and when those function calls return they pop a frame from the stack. This is what you'll see when a running program crashes and you see a stack trace. When you read through this stack trace you'll see all the calling functions up to where your program got up to. This is the program unwinding the stack and showing you all the values on it.
+The [**heap**](https://en.wikipedia.org/wiki/Memory_management#HEAP) and the [**stack**](https://en.wikipedia.org/wiki/Stack-based_memory_allocation) are two locations in memory where objects are stored by a running program. Garbage collection operates on the heap, not the stack. The stack is a data structure that stores values as they're defined in a function. Calling another function within a function will push a new [**frame**](https://en.wikipedia.org/wiki/Call_stack) onto the stack. This frame will contain the values of that function and so on. When that function return the stack frame corresponding to that function is popped off the stack. This is what you'll see when a running program crashes and you see a stack trace. The stack trace contains all the calling functions up to where your program got up to.
 
-IMAGE OF STACK AND HEAP
+IMAGE OF STACK
 
-The heap is another area of memory that stores values that need to be referenced outside of a called function. This can be statically defined constants at the start of a program, or more complex objects, such as Go structs. When the programmer defines an object that goes on the heap, the memory that object requires gets placed on the heap and a pointer to it is returned. Think about the heap as a big graph where the nodes are objects on the heap, which are referred to by some place in code or by another object. If unattended, the heap will continue to grow as more objects are added.
+In contrast, the heap contains values that need to be referenced outside of a function. For example, statically defined constants at the start of a program, or more complex objects, such as Go structs. When the programmer defines an object that is placed on the heap, the memory that object requires gets is allocated on the heap and a pointer to it is returned. Think about the heap as a big graph where nodes are objects referred to by a place in code or another object. As a program runs, the heap will continue to grow as more objects are added unless the heap is cleaned up.
 
-IMAGE OF A HEAP GRAPH GOES HERE
+IMAGE OF A HEAP AND HEAP GRAPH GOES HERE
 
-Go is a language that prefers to allocate memory on the stack, so most memory allocations will end up on the stack. This means that Go has a stack per goroutine and per function and when possible Go will allocate variables to a function's stack frame. The Go compiler will attempt to prove that a variable is not referenced after a function returns through a process called escape analysis. If the compiler cannot determine that a variable only appears in one function, it will allocate the variable on the heap. Generally if a Go program has a pointer to an object then that object is stored on the heap. Take a look at this sample code:
+Go is a language that prefers to allocate memory on the stack ***REFERENCE PLEASE***, so most memory allocations will end up on the stack. This means that Go has a stack per goroutine and when possible Go will allocate variables into this stack. The Go runtime attempts to prove that a variable is not needed outside of the function by performing **escape analysis** to see if an object "escapes" the function. If it's unclear that a variable only appears in one function, it will be allocated on the heap. Generally if a Go program has a pointer to an object then that object is stored on the heap. Take a look at this sample code:
 
 ```go
+package main
+
 type myStruct struct {
   value int
 }
 
-testStruct := myStruct{value: 0}
+var testStruct = myStruct{value: 0}
 
 func addTwoNumbers(a int, b int) int {
   return a + b
@@ -85,24 +87,38 @@ func myFunction() {
   testStruct.value = addTwoNumbers(testVar1, testVar2)
 }
 
-myFunction()
+func someOtherFunction() {
+  // some other code
+  myFunction()
+  // some more code
+}
+
 ```
 
-First off, imagine that this segment of code is running as part of a bigger program. When the program runs, `testStruct` is defined and placed on the heap in an available block of memory. After this, `myFunction` is executed and allocated a stack while the function is running. When `myFunction` is being executed, `testVar1` and `testVar2` are both stored on the stack in a Last In First Out way. When we call `addTwoNumbers` a new stack frame is pushed onto the stack which includes the two values that are passed into it. Once `addTwoNumbers` is finished executing, the value is returned and the stack frame we just created is popped off the stack as we're finished with it. The pointer to `testStruct` is now followed to a location on the heap and the `value` field is updated. `myFunction` exits and the stack created for it is cleaned up. At this point, the value for `testStruct` stays on the heap and is assessed as part of the garbage collection process.
+For the purposes of this example, let's imagine this is part of a running program. If this was a program in isolation the Go compiler would optimise this to a degree where a heap wouldn't be required. When the program runs:
+
+1. `testStruct` is defined and placed on the heap in an available block of memory.
+2. After this, `myFunction` is executed and allocated a stack while the function is running.
+3. When `myFunction` is being executed, `testVar1` and `testVar2` are both stored on the stack. When `addTwoNumbers` is called a new stack frame is pushed onto the stack which includes the two arguments.
+4. Once `addTwoNumbers` is finished executing, the value is returned and the stack frame that was created is popped off the stack as it's no longer needed.
+5. The pointer to `testStruct` is now followed to the location on the heap containing it and the `value` field is updated.
+6. `myFunction` exits and the stack created for it is cleaned up. At this point, the value for `testStruct` stays on the heap and is assessed as part of the garbage collection process.
 
 ADD IMAGE OF STACK AND HEAP HERE
 
-At this point in the running program `testStruct` is on the heap and without any help, the Go runtime doesn't know if it still needs to be there or can be removed. To do this, we rely on a garbage collector. There's a number of approaches to garbage collection but one of the key concepts they have in common is this idea of a **mutator and a collector**. The collector runs the garbage collection functions and works to find objects that are unreachable so that they can be freed, and the memory can be reused by the running program. The mutator has the responsibility of executing application code. This includes allocating new objects and updating the pointers on the heap to point to different objects. In the process of updating the heap, the mutator will make some objects unreachable.
-
-PROBABLY PUT THIS IN THE ABOVE PARAGRAPH => <https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/>
+`testStruct` is now on the heap and without analysis, the Go runtime doesn't know if it's still needed. To do this, Go relies on a garbage collector. There's multiple ways to implement garbage collection but one of the key concepts they all have is a **mutator and a collector**. The collector runs the garbage collection functions and finds objects that should have their memory freed. The mutator executes application code and has the job of allocating new objects, as well as updating pointers on the heap to point to different objects. As a program runs, the mutator will make some objects unreachable as they're no longer needed.
 
 ADD IMAGE OF PREVIOUS HEAP HAVING AN OBJECT BE CUT OFF. LIKE, ARROW GOING FROM ONE THING TO ANOTHER, LEAVING THE OLD THING STUCK OUT THERE.
 
-The garbage collector used by Go is a **non-generational concurrent, tri-color mark and sweep garbage collector**.
+Go's garbage collector is a **non-generational concurrent, tri-color mark and sweep garbage collector**. Let's break these terms down.
 
-Generational garbage collectors work off the assumption that most memory reclamations are made on short lived objects such as temporary variables, therefore it makes sense to spend more time looking at recently allocated objects. However, because Go prefers to allocate memory on the stack, Go generally has a larger proportion of objects that don't get placed on the heap so it doesn't need to rely on generational garbage collection. <https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU>  Concurrent means that the collector runs at the same time with mutator threads <link to mgc.go goes here>. Therefore, it is a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the way that mark and sweep is implemented.
+Generational garbage collectors assume that short lived objects like temporary variables are reclaimed most often. Because of this, a generational garbage collector focuses on recently allocated objects. However, the Go compiler allocates objects which have a known lifetime to the stack. [This means that fewer objects need to be garbage collected so a generational garbage collector offers fewer benefits](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ). [Concurrent means that the collector runs at the same time with mutator threads](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L7). Therefore, Go uses a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the algorithm used to implement mark and sweep.
 
-A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. The mark phase has the collector traversing the graph of objects stored in the heap and marking objects that are no longer needed, and the sweep phase consists of removing objects that have been marked for removal. A mark and sweep is an indirect garbage collection algorithm because it doesn't detect garbage but instead marks live objects and then knows that anything left over is garbage.
+A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. The mark phase has the collector traversing the graph of objects stored in the heap and marking objects that are no longer needed, and the sweep phase consists of removing objects that have been marked for removal. A mark and sweep is an indirect garbage collection algorithm because it doesn't detect garbage but instead marks live objects and then knows that anything left over is garbage. This is a gif of how a mark and sweep collector works, [taken from here](https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/). If you're interested, there's visualisations of other kinds of garbage collectors too.
+
+**INSERT GIF IN HERE**
+
+**PROBABLY REWRITE THIS INTO STEPS BASED OFF THE COMMENT IN mcg.go**
 
 The mark phase scans the heap to figure out which objects are needed by the application and which can be collected. But as we've previously established the Go garbage collector is **concurrent**. This means that the collector is running at the same time as the mutator so that new information could be added to the heap as the collector is running. This is bad because we could lose data integrity on the heap. To prevent this a **write barrier** is turned on. The write barrier prevents any more information being added to the heap by stopping the program for a short while. This is called **stop the world** time, and it is the first of two times that the collector stops the world. By stopping the world the collector looks at the heap at that moment in time and doesn't have to worry about the mutator changing it.
 
