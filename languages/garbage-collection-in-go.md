@@ -41,13 +41,13 @@ I want to be able to introduce somebody (like me) to the concept of garbage coll
 
 ### Introduction
 
-In this article I'm going to talk about garbage collectors, and give you an overview of how the Golang garbage collector works. I'm aiming to give a high level view of memory management and how Go implements this through a garbage collector. At the moment, Go 1.16 is the most up to date version of Go so that's what this is based on. If you're reading this and a later version of Go has been released, some of this information may be outdated.
+In this article I'm going to discuss memory management and how Go handles this. I'll start by giving a high level overview of memory management and then dive deeper into Go implements this by using a garbage collector. I've based this article on Go 1.16, so later versions may outdate some of this information.
 
-As any moderately complex program runs it will write objects to memory. At some point these memory objects will be cleaned up as they're no longer needed. For example, in C when the programmer defines a string they'll typically call function such as `malloc` or `calloc`. These functions return a pointer containing the location of that string in memory, but more specifically on the heap. Once the programmer is finished with this string they will call the function `free` to allow this chunk of memory to be used again. This method of memory management is called **explicit deallocation** and is quite powerful. It gives the programmer greater control over the memory being used by the program, which allows for some easier optimisations depending on the program. However, it leads to two types of programming errors.
+As most programs run they write objects to memory. At some point these objects should be removed as they aren't needed anymore. In a language like C the programmer will call a function such as `malloc` or `calloc` to write an object to memory. These functions return a pointer to the location of that object in heap memory. When this object is not needed anymore, the programmer calls the `free` function to allow this use this chunk of memory again. This method of memory management is **explicit deallocation** and is quite powerful. It gives the programmer greater control over the memory in use, which allows for some types of easier optimisation. However, it leads to two types of programming errors.
 
-One, calling `free` prematurely which creates a **dangling pointer**. Dangling pointers are pointers that no longer point to valid objects in memory. This is bad because the program expect a defined value to live at a pointer. If this pointer is then accessed later there's no guarantee of what value exists at that location in memory. There may be nothing there, or some other value entirely. Two, the opposite, failing to free memory at all. If the programmer forgets to free an object in memory they may face a **memory leak** as more and more objects are written to memory. This can lead to performance degradation or the program crashing if it runs out of memory. It's easy to introduce unpredictable bugs into a program when memory has to be explicitly managed.
+One, calling `free` prematurely which creates a **dangling pointer**. Dangling pointers are pointers that no longer point to valid objects in memory. This is bad because the program expects a defined value to live at a pointer. When this pointer is later accessed there's no guarantee of what value exists at that location in memory. There may be nothing there, or some other value entirely. Two, the opposite, failing to free memory at all. If the programmer forgets to free an object they may face a **memory leak** as memory fills up with more and more objects. This can lead to the program slowing down or the program crashing if it runs out of memory. Unpredictable bugs can be introduced into a program when memory has to be explicitly managed.
 
-This is why many programmers use languages, like Go, that offer **automatic dynamic memory management**, or just **garbage collection**. Languages like this offer a number of benefits like:
+This is why languages like Go offer **automatic dynamic memory management**, or just **garbage collection**. Languages like this offer benefits like:
 
 - increased security
 - better portability across operating systems
@@ -55,13 +55,13 @@ This is why many programmers use languages, like Go, that offer **automatic dyna
 - runtime verification of code
 - bounds checking of arrays
 
-Garbage collection does have a performance overhead, but it isn't as much as is commonly assumed. This means that programmers can spend more time writing the business logic of their programs and ensuring that it meets the needs of the end user.
+Garbage collection has a performance overhead, but it isn't as much as is assumed. The tradeoff is that a programmer can focus on the business logic of their program and ensure it meets the needs of the end user, instead of worrying about managing memory.
 
-The [**heap**](https://en.wikipedia.org/wiki/Memory_management#HEAP) and the [**stack**](https://en.wikipedia.org/wiki/Stack-based_memory_allocation) are two locations in memory where objects are stored by a running program. Garbage collection operates on the heap, not the stack. The stack is a data structure that stores values as they're defined in a function. Calling another function within a function will push a new [**frame**](https://en.wikipedia.org/wiki/Call_stack) onto the stack. This frame will contain the values of that function and so on. When that function return the stack frame corresponding to that function is popped off the stack. This is what you'll see when a running program crashes and you see a stack trace. The stack trace contains all the calling functions up to where your program got up to.
+A running program will store objects in two locations in memory, the [**heap**](https://en.wikipedia.org/wiki/Memory_management#HEAP) and the [**stack**](https://en.wikipedia.org/wiki/Stack-based_memory_allocation).Garbage collection operates on the heap, not the stack. The stack is a data structure that stores values as they're defined in a function. Calling another function within a function will push a new [**frame**](https://en.wikipedia.org/wiki/Call_stack) onto the stack. This frame will contain the values of that function and so on. When that function return the stack frame corresponding to that function is popped off the stack. This is what you'll see when a running program crashes and you see a stack trace. The stack trace contains all the calling functions up to where your program got up to.
 
 IMAGE OF STACK
 
-In contrast, the heap contains values that need to be referenced outside of a function. For example, statically defined constants at the start of a program, or more complex objects, such as Go structs. When the programmer defines an object that is placed on the heap, the memory that object requires gets is allocated on the heap and a pointer to it is returned. Think about the heap as a big graph where nodes are objects referred to by a place in code or another object. As a program runs, the heap will continue to grow as more objects are added unless the heap is cleaned up.
+n contrast, the heap contains values that are referenced outside of a function. For example, statically defined constants at the start of a program, or more complex objects, like Go structs. When the programmer defines an object that gets placed on the heap, the needed amount of memory is allocated and a pointer to it is returned. The heap is a big graph where objects are nodes referred to in code or by another object. As a program runs, the heap will continue to grow as objects are added unless the heap is cleaned up.
 
 IMAGE OF A HEAP AND HEAP GRAPH GOES HERE
 
@@ -114,23 +114,27 @@ Go's garbage collector is a **non-generational concurrent, tri-color mark and sw
 
 Generational garbage collectors assume that short lived objects like temporary variables are reclaimed most often. Because of this, a generational garbage collector focuses on recently allocated objects. However, the Go compiler allocates objects which have a known lifetime to the stack. [This means that fewer objects need to be garbage collected so a generational garbage collector offers fewer benefits](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ). [Concurrent means that the collector runs at the same time with mutator threads](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L7). Therefore, Go uses a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the algorithm used to implement mark and sweep.
 
-A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. The mark phase has the collector traversing the graph of objects stored in the heap and marking objects that are no longer needed, and the sweep phase consists of removing objects that have been marked for removal. A mark and sweep is an indirect garbage collection algorithm because it doesn't detect garbage but instead marks live objects and then knows that anything left over is garbage. This is a gif of how a mark and sweep collector works, [taken from here](https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/). If you're interested, there's visualisations of other kinds of garbage collectors too.
+A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. In the mark phase the collector traverses the heap and marks objects that are no longer needed, and the sweep phase see these objects removed. A mark and sweep is an indirect garbage collection algorithm because it marks live objects that are needed, and removes everything else. This is a gif of how a mark and sweep collector works, [taken from here](https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/). If you're interested, there's visualisations of other kinds of garbage collectors too.
 
 **INSERT GIF IN HERE**
 
 **PROBABLY REWRITE THIS INTO STEPS BASED OFF THE COMMENT IN mcg.go**
 
-The mark phase scans the heap to figure out which objects are needed by the application and which can be collected. But as we've previously established the Go garbage collector is **concurrent**. This means that the collector is running at the same time as the mutator so that new information could be added to the heap as the collector is running. This is bad because we could lose data integrity on the heap. To prevent this a **write barrier** is turned on. The write barrier prevents any more information being added to the heap by stopping the program for a short while. This is called **stop the world** time, and it is the first of two times that the collector stops the world. By stopping the world the collector looks at the heap at that moment in time and doesn't have to worry about the mutator changing it.
+Go implements this in a few steps.
 
-At this point the mark phase can begin the actual work of marking heap objects that are still being used. It does this by implementing a **tri-color algorithm**. When marking begins, all objects are considered white except for the root objects which are colored grey.
+Go gets all goroutines to reach a garbage collection safe point which is done through a process called **stop the world**. At this point, the program stops running temporarily. Then a **write barrier** is turned on to maintain data integrity on the heap. This is needed because goroutines and the collector will be running at the same time, which is why this is a concurrent garbage collector.
+
+Once all goroutines have the write barrier turned on, the Go runtime **starts the world** again and lets workers perform the garbage collection work.
+
+The garbage collector begins the mark phase by scanning stacks, globals and heap pointers. When a stack is scanned the goroutine is stopped, pointers are marked and then the goroutine is resumed. Marking is performed by implementing a **tri-color algorithm**. When marking begins, all objects are considered white except for the root objects which are colored grey. Roots are objects that can be accessed directly by the application.
 
 PICTURE OF WHITE WITH GREY ROOTS
 
-The collector will traverse through the heap and color everything that it comes across as grey.
+Objects will be traversed downwards from the roots and objects that are encountered are marked as grey.
 
 PICTURE OF SOME GREY NODES AND SOME WHITE NODES
 
-The grey objects are then queued up to be turned black.
+The grey objects are then enqueued to be turned black to indicate that they're still live.
 
 PICTURE OF GREY NODES TURNING BLACK
 
@@ -138,9 +142,12 @@ The collector will then stop the world again and clean up all the white nodes th
 
 PICTURE OF WHITE NODES BEING COLLECTED
 
-The garbage in the heap has now been collected and the program will continue running again.
+This process is kicked off again once the program has allocated extra memory proportional to the memory in use. The proportion is determined by the `GOGC` environment variable which is set to 100 by default. [This is described in the Go source code as](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L112):
 
-*CONCLUDING PARAGRAPH???*
+> If GOGC=100 and we're using 4M, we'll GC again when we get to 8M (this mark is tracked in next_gc variable). This keeps the GC cost in linear proportion to the allocation cost. Adjusting GOGC just changes the linear constant (and also the amount of extra memory used).
+
+As you can see, the garbage collector in Go can help you be more efficient as a developer by abstracting the memory management process into the runtime. It's also part of what enables Go to be so performant. Go has some additional tooling to allow you to optimise how garbage collection occurs in your program, but I might touch on it in a later article. For now, I hope you learnt a bit more about how garbage collection works generally and how Go does it.
+
 ## References
 
 [The Garbage Collection Handbook](https://gchandbook.org/)
@@ -150,9 +157,12 @@ The garbage in the heap has now been collected and the program will continue run
 [Garbage Collection in Go: Part 1](https://www.ardanlabs.com/blog/2018/12/garbage-collection-in-go-part1-semantics.html)
 [Tracing garbage collection: Tri-color marking](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking)
 [Golang: Cost of using the heap](https://medium.com/invalid-memory/golang-cost-of-using-the-heap-e70363469754)
+[Implementing memory management with Golang’s garbage collector](https://hub.packtpub.com/implementing-memory-management-with-golang-garbage-collector/)
 
 ## Part 2
 
 - More info on how to use this in Go to debug stuff. so you can run `GODEBUG=gctrace=1 ./app`. There's honestly heaps in here, so maybe do another article on how to debug Go programs and how to read the analysis, what to do with it. Bonus points if you find some optimisation in one of our apps tht you can improve and then discuss.
 
+## Offcuts
 
+The mark phase scans the heap to figure out which objects are needed by the application and which can be collected. In a concurrent garbage collector the mutator and the collector are running simultaneously. This means that new objects could be added to the heap as the collector is running. This is bad because the heap could lose data integrity. To prevent this a **write barrier** is turned on. The write barrier prevents any more information being added to the heap by stopping the program for a short while. This is called **stop the world** time, and it is the first of two times that the collector stops the world. By stopping the world the collector looks at the heap at that moment in time and doesn't have to worry about the mutator changing it.
