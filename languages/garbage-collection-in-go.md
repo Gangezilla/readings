@@ -61,11 +61,11 @@ A running program will store objects in two locations in memory, the [**heap**](
 
 IMAGE OF STACK
 
-n contrast, the heap contains values that are referenced outside of a function. For example, statically defined constants at the start of a program, or more complex objects, like Go structs. When the programmer defines an object that gets placed on the heap, the needed amount of memory is allocated and a pointer to it is returned. The heap is a big graph where objects are nodes referred to in code or by another object. As a program runs, the heap will continue to grow as objects are added unless the heap is cleaned up.
+In contrast, the heap contains values that are referenced outside of a function. For example, statically defined constants at the start of a program, or more complex objects, like Go structs. When the programmer defines an object that gets placed on the heap, the needed amount of memory is allocated and a pointer to it is returned. The heap is a big graph where objects are represented as nodes that are referred to in code or by another object. As a program runs, the heap will continue to grow as objects are added unless the heap is cleaned up.
 
 IMAGE OF A HEAP AND HEAP GRAPH GOES HERE
 
-Go is a language that prefers to allocate memory on the stack ***REFERENCE PLEASE***, so most memory allocations will end up on the stack. This means that Go has a stack per goroutine and when possible Go will allocate variables into this stack. The Go runtime attempts to prove that a variable is not needed outside of the function by performing **escape analysis** to see if an object "escapes" the function. If it's unclear that a variable only appears in one function, it will be allocated on the heap. Generally if a Go program has a pointer to an object then that object is stored on the heap. Take a look at this sample code:
+Go [prefers to allocate memory on the stack](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ), so most memory allocations will end up there. This means that Go has a stack per goroutine and when possible Go will allocate variables into this stack. The Go runtime attempts to prove that a variable is not needed outside of the function by performing **escape analysis** to see if an object "escapes" the function. If it's unclear that a variable only appears in one function, it will be allocated on the heap. Generally if a Go program has a pointer to an object then that object is stored on the heap. Take a look at this sample code:
 
 ```go
 package main
@@ -95,46 +95,41 @@ func someOtherFunction() {
 
 ```
 
-For the purposes of this example, let's imagine this is part of a running program. If this was a program in isolation the Go compiler would optimise this to a degree where a heap wouldn't be required. When the program runs:
+For the purposes of this example, let's imagine this is part of a running program. If this was the entire program the Go compiler would optimise this by allocating all variables into stacks. When the program runs:
 
 1. `testStruct` is defined and placed on the heap in an available block of memory.
-2. After this, `myFunction` is executed and allocated a stack while the function is running.
-3. When `myFunction` is being executed, `testVar1` and `testVar2` are both stored on the stack. When `addTwoNumbers` is called a new stack frame is pushed onto the stack which includes the two arguments.
-4. Once `addTwoNumbers` is finished executing, the value is returned and the stack frame that was created is popped off the stack as it's no longer needed.
-5. The pointer to `testStruct` is now followed to the location on the heap containing it and the `value` field is updated.
-6. `myFunction` exits and the stack created for it is cleaned up. At this point, the value for `testStruct` stays on the heap and is assessed as part of the garbage collection process.
+2. `myFunction` is executed and allocated a stack while the function is running.
+3. When `myFunction` is being executed, `testVar1` and `testVar2` are both stored on the stack. When `addTwoNumbers` is called a new stack frame is pushed onto the stack with the two function arguments.
+4. When `addTwoNumbers` finishes execution, the value is returned to `myFunction`. As this happens, the stack frame for `addTwoNumbers` is popped off the stack as it's no longer needed.
+5. The pointer to `testStruct` is followed to the location on the heap containing it and `value` is updated.
+6. `myFunction` exits and the stack created for it is cleaned up. The value for `testStruct` stays on the heap until garbage collection occurs.
 
 ADD IMAGE OF STACK AND HEAP HERE
 
-`testStruct` is now on the heap and without analysis, the Go runtime doesn't know if it's still needed. To do this, Go relies on a garbage collector. There's multiple ways to implement garbage collection but one of the key concepts they all have is a **mutator and a collector**. The collector runs the garbage collection functions and finds objects that should have their memory freed. The mutator executes application code and has the job of allocating new objects, as well as updating pointers on the heap to point to different objects. As a program runs, the mutator will make some objects unreachable as they're no longer needed.
+`testStruct` is now on the heap and without analysis, the Go runtime doesn't know if it's still needed. To do this, Go relies on a garbage collector. Garbage collectors have two key parts,  **a mutator and a collector**. The collector executes garbage collection logic and finds objects that should have their memory freed. The mutator executes application code and allocates new objects. It also updates pointers on the heap to point to different objects as the program runs. As part of this process, some mutator makes some objects unreachable when they're no longer needed.
 
 ADD IMAGE OF PREVIOUS HEAP HAVING AN OBJECT BE CUT OFF. LIKE, ARROW GOING FROM ONE THING TO ANOTHER, LEAVING THE OLD THING STUCK OUT THERE.
 
 Go's garbage collector is a **non-generational concurrent, tri-color mark and sweep garbage collector**. Let's break these terms down.
 
-Generational garbage collectors assume that short lived objects like temporary variables are reclaimed most often. Because of this, a generational garbage collector focuses on recently allocated objects. However, the Go compiler allocates objects which have a known lifetime to the stack. [This means that fewer objects need to be garbage collected so a generational garbage collector offers fewer benefits](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ). [Concurrent means that the collector runs at the same time with mutator threads](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L7). Therefore, Go uses a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the algorithm used to implement mark and sweep.
+The [generational hypothesis](https://www.memorymanagement.org/glossary/g.html#term-generational-hypothesis) assumes that short lived objects are reclaimed most often. Thus, a generational garbage collector focuses on recently allocated objects. However, compiler optimisations allow the Go compiler to allocate objects with a known lifetime to the stack.[This means fewer objects will be on the heap, so fewer objects will be garbage collected.](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ). This means that a generational garbage collector offers fewer benefits in Go.
+[Concurrent means that the collector runs at the same time with mutator threads](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L7). Therefore, Go uses a non-generational concurrent garbage collector. Mark and sweep is the type of garbage collector and tri-color is the algorithm used to implement this
 
-A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. In the mark phase the collector traverses the heap and marks objects that are no longer needed, and the sweep phase see these objects removed. A mark and sweep is an indirect garbage collection algorithm because it marks live objects that are needed, and removes everything else. This is a gif of how a mark and sweep collector works, [taken from here](https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/). If you're interested, there's visualisations of other kinds of garbage collectors too.
+A mark and sweep garbage collector has two phases, unsurprisingly named **mark** and **sweep**. In the mark phase the collector traverses the heap and marks objects that are no longer needed. The follow-up sweep phase removes these objects. Mark and sweep is an indirect algorithm, as it marks live objects, and removes everything else. This is a gif of how a mark and sweep collector works, [taken from here](https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/). There's other visualisations of other kinds of garbage collectors too.
 
 **INSERT GIF IN HERE**
 
-**PROBABLY REWRITE THIS INTO STEPS BASED OFF THE COMMENT IN mcg.go**
+[Go implements this in a few steps:](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L24)
 
-Go implements this in a few steps.
+Go has all goroutines reach a garbage collection safe point with a process called **stop the world**. This temporarily stops the program from running and turns a **write barrier** on to maintain data integrity on the heap. This fulfills concurrency by allowing goroutines and the collector to run simultaneously.
 
-Go gets all goroutines to reach a garbage collection safe point which is done through a process called **stop the world**. At this point, the program stops running temporarily. Then a **write barrier** is turned on to maintain data integrity on the heap. This is needed because goroutines and the collector will be running at the same time, which is why this is a concurrent garbage collector.
+Once all goroutines have the write barrier turned on, the Go runtime **starts the world** and has workers perform the garbage collection work.
 
-Once all goroutines have the write barrier turned on, the Go runtime **starts the world** again and lets workers perform the garbage collection work.
-
-The garbage collector begins the mark phase by scanning stacks, globals and heap pointers. When a stack is scanned the goroutine is stopped, pointers are marked and then the goroutine is resumed. Marking is performed by implementing a **tri-color algorithm**. When marking begins, all objects are considered white except for the root objects which are colored grey. Roots are objects that can be accessed directly by the application.
-
-PICTURE OF WHITE WITH GREY ROOTS
-
-Objects will be traversed downwards from the roots and objects that are encountered are marked as grey.
+Marking is implemented by using a **tri-color algorithm**. When marking begins, all objects are white except for the root objects which are grey. A roots is an object that can the application directly accesses. The garbage collector begins marking by scanning stacks, globals and heap pointers.  When scanning a stack, the worker stops the goroutine and marks all found objects grey by traversing downwards from the roots. It then resumes the goroutine.
 
 PICTURE OF SOME GREY NODES AND SOME WHITE NODES
 
-The grey objects are then enqueued to be turned black to indicate that they're still live.
+The grey objects are then enqueued to indicate they're still live by turning them black.
 
 PICTURE OF GREY NODES TURNING BLACK
 
@@ -142,12 +137,11 @@ The collector will then stop the world again and clean up all the white nodes th
 
 PICTURE OF WHITE NODES BEING COLLECTED
 
-This process is kicked off again once the program has allocated extra memory proportional to the memory in use. The proportion is determined by the `GOGC` environment variable which is set to 100 by default. [This is described in the Go source code as](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L112):
+This process is initiated again once the program has allocated extra memory proportional to the memory in use. The `GOGC` environment variable determines this, and is set to 100 by default. [The Go source code describes this as:](https://github.com/golang/go/blob/master/src/runtime/mgc.go#L112):
 
 > If GOGC=100 and we're using 4M, we'll GC again when we get to 8M (this mark is tracked in next_gc variable). This keeps the GC cost in linear proportion to the allocation cost. Adjusting GOGC just changes the linear constant (and also the amount of extra memory used).
 
-As you can see, the garbage collector in Go can help you be more efficient as a developer by abstracting the memory management process into the runtime. It's also part of what enables Go to be so performant. Go has some additional tooling to allow you to optimise how garbage collection occurs in your program, but I might touch on it in a later article. For now, I hope you learnt a bit more about how garbage collection works generally and how Go does it.
-
+Go's garbage collector improves your efficiency by abstracting memory management into the runtime. It's also one part of what enables Go to be so performant. Go has tooling to allow you to optimise how garbage collection occurs in your program, but it's out of scope for this article. For now, I hope you learnt a bit more about how garbage collection works generally and how it's implemented in Go.
 ## References
 
 [The Garbage Collection Handbook](https://gchandbook.org/)
@@ -158,11 +152,9 @@ As you can see, the garbage collector in Go can help you be more efficient as a 
 [Tracing garbage collection: Tri-color marking](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking)
 [Golang: Cost of using the heap](https://medium.com/invalid-memory/golang-cost-of-using-the-heap-e70363469754)
 [Implementing memory management with Golang’s garbage collector](https://hub.packtpub.com/implementing-memory-management-with-golang-garbage-collector/)
+[Google Groups discussion, comment by Ian Lance Taylor](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ)
+[Memory Management Reference](https://www.memorymanagement.org)
 
 ## Part 2
 
 - More info on how to use this in Go to debug stuff. so you can run `GODEBUG=gctrace=1 ./app`. There's honestly heaps in here, so maybe do another article on how to debug Go programs and how to read the analysis, what to do with it. Bonus points if you find some optimisation in one of our apps tht you can improve and then discuss.
-
-## Offcuts
-
-The mark phase scans the heap to figure out which objects are needed by the application and which can be collected. In a concurrent garbage collector the mutator and the collector are running simultaneously. This means that new objects could be added to the heap as the collector is running. This is bad because the heap could lose data integrity. To prevent this a **write barrier** is turned on. The write barrier prevents any more information being added to the heap by stopping the program for a short while. This is called **stop the world** time, and it is the first of two times that the collector stops the world. By stopping the world the collector looks at the heap at that moment in time and doesn't have to worry about the mutator changing it.
