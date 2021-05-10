@@ -93,3 +93,8 @@ Infix operators have an expression on the left and right.
 
 ## How Pratt Parsing works
 
+Suppose we're parsing `1 + 2 + 3;`.The challenge isn't to represent every operator, but to nest the AST nodes correctly. We're after an AST that looks like this `((1 + 2) + 3)`. The AST needs to have two `*ast.InfixExpression` nodes, with the left one containing 1 and 2 and the right one containing 3.
+
+- `parseExpressionStatement` calls `parseExpression(LOWEST)`. `p.curToken` and `p.peekToken` are 1 and +.
+
+## Extending the Parser

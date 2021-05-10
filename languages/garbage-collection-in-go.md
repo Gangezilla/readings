@@ -155,6 +155,13 @@ Go's garbage collector improves your efficiency by abstracting memory management
 [Google Groups discussion, comment by Ian Lance Taylor](https://groups.google.com/g/golang-nuts/c/KJiyv2mV2pU/m/wdBUH1mHCAAJ)
 [Memory Management Reference](https://www.memorymanagement.org)
 
+## Required Images
+
+Stack
+Heap + graph
+stack and heap
+Visualisation of gc nodes, several images or a gif??
+
 ## Part 2
 
 - More info on how to use this in Go to debug stuff. so you can run `GODEBUG=gctrace=1 ./app`. There's honestly heaps in here, so maybe do another article on how to debug Go programs and how to read the analysis, what to do with it. Bonus points if you find some optimisation in one of our apps tht you can improve and then discuss.
