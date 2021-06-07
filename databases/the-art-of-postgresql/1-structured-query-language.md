@@ -11,7 +11,9 @@ SQL lets us declare the result we want to obtain in terms of a data processing p
 
 PSQL implements a protocol level faciliy to send the static SQL query text separately from its dynamic arguments. An SQL injection when the database server is mistakenly led to consider a dynamic argument of a query as part of the query text. Sending those parts as separate entities over the protocol means the SQL injection is no longer possible.
 
-It's advisable that you read the documentation of your current driver and understand how to send SQL query parameters separate from the main SQL query text, this is a reliable way to never have to worry about SQL injection problems ever again. Never build a query string by concatenating your query arguments directly into your query strings
+It's advisable that you read the documentation of your current driver and understand how to send SQL query parameters separate from the main SQL query text, this is a reliable way to never have to worry about SQL injection problems ever again. Never build a query string by concatenating your query arguments directly into your query strings.
+
+SQL injection happens when the SQL parser is fooled into believing that a parameter string is in fact a SQL query. When the query lives in your app code, and the user-supplied params are sent separately on the network there's no way the SQL engine can get confused.
 
 ## Back to discovering SQL
 

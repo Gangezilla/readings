@@ -183,3 +183,33 @@ Record formats: Variable length
 ## Summary
 
 Logical structure, table. Maps downwards to a file full of pages, abstract page which is a record, goes to byte representation in file. Putting records on pages using slotted page architecture.
+
+- Heap files, unordered collection of records. How does this work and at what cost?
+  - Insert/delete/modify records
+  - Fetch a record by record ID
+  - Scan all records, maybe some conditions
+- Many alternatives, some are good in some situations and less so in others.
+- Big picture overhead for data access. We'll overly simplify models and then dial it back, its how you'd do performance analysis.
+
+## Cost Model
+
+- B: The number of data blocks in the file
+- R: Number of records per block
+- D: Average time to read/write disk block. No distinction between sequential or random access.
+- We'll be focusing on average case analysis for uniform random workloads.
+- Assumptions
+  - Going to ignore sequential vs random i/o, ignore prefetching, any in-memory costs.
+  - This should be good enough to show the overall trends.
+  - Assuming that every insert and delete is a single record.
+  - Equality selection, assume exactly one match.
+  - For heap files, insert always appends to end of file.
+  - For sorted files, packed: files compacted after deletion and sorted according to search key.
+  
+### Example
+
+B: 5, R: 2, D: 5ms
+- **Scan all records** For heap/sorted file, the time to scan all of the records doesn't change. The time to scan all records is B * D.
+- **Equality Search**: Heap file, we scan through the records. Might sometimes be quicker but might be at very end. On average we'd touch about half the pages in the file. Sorted file, We started in the middle most block, and do binary search to get the record. Binary search, average case comes out to log base 2 and worst case is the same. Heap file, 0.5 * B * D. Sorted Files (log base 2 B) * D
+- **Range Search**: Heap file, always touch all blocks. Sorted file, do a binary search to find the start, and then just scan right till we get to the end of the range
+- **Insert**: Stick at end of file, 2 * D. We can't manipulate data pages directly, so we bring it into memory, manipulate it, and then write it back to the page on disk. 1 for read, one for write so thats 2. We never manipulate disk directly, we read it from disk, bring it into memory, manipulate it and then write it back. So if you're reading a big glob of data, that's going to impact your total memory, which is what we've seen a few times when looking at memory dumps. Sorted file: Find location for record, insert and shift rest of file.
+- **Deletion:** Heap file, cost to find records (B/2) reads. Delete record. (B/2 + 1) * D. The extra 1 is the write cost of the modified page. Sorted file, find location for the record
