@@ -1,21 +1,51 @@
 <canvas id="canvas" width=600 height=600 style="border: 1px grey solid"></canvas>
 
 <script>
-  // Initialisation and constants
-  const canvas = document.getElementById('canvas');
-  const canvas_context = canvas.getContext("2d");
-  const canvas_buffer = canvas_context.getImageData(0, 0, canvas.width, canvas.height);
-  const canvas_pitch = canvas_buffer.width * 4;
-
-  const background_color = [255, 255, 255];
-  const viewport_size = 1;
-  const projection_plane_z = 1;
-  const camera_position = [0, 0, 0];
+  // Object instantiation functions
   const Sphere = function(center, radius, color) {
     this.center = center;
     this.radius = radius;
     this.color = color;
   }
+
+  const Light = function(ltype, intensity, position) {
+    this.ltype = ltype;
+    this.intensity = intensity;
+    this.position = position
+  }
+
+  Light.AMBIENT = 0;
+  Light.POINT = 1;
+  Light.DIRECTIONAL = 2;
+
+  // Canvas initialisation
+  const canvas = document.getElementById('canvas');
+  const canvas_context = canvas.getContext("2d");
+  const canvas_buffer = canvas_context.getImageData(0, 0, canvas.width, canvas.height);
+  const canvas_pitch = canvas_buffer.width * 4;
+
+  // Scene initialisation
+
+  const background_color = [255, 255, 255];
+  const viewport_size = 1;
+  const projection_plane_z = 1;
+  const camera_position = [0, 0, 0];
+
+  // Scene Objects
+  const spheres = [
+    new Sphere([0, -1, 3], 1, [255, 0, 0]),
+    new Sphere([2, 0, 4], 1, [0, 0, 255]),
+    new Sphere([-2, 0, 4], 1, [0, 255, 0]),
+    new Sphere([0, -5001, 0], 5000, [255, 255, 0])
+  ]
+
+  const lights = [
+    new Light(Light.AMBIENT, 0.2),
+    new Light(Light.POINT, 0.6, [2, 1, 0]),
+    new Light(Light.DIRECTIONAL, 0.2, [1, 4, 4]),
+  ]
+
+  // Canvas updating functions
 
   const putPixel = function(x, y, color) {
     x = canvas.width / 2 + x;
@@ -37,22 +67,52 @@
   }
 
   // Algebra helpers
-
   // Dot product of two 3D vectors.
   const dotProduct = (v1, v2) => {
     return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];  
   }
 
-  // Computes v1 - v2.
-  const subtract = (v1, v2) => {
-    return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
-  }
+  const length = (vec) => Math.sqrt(dotProduct(vec, vec))
 
-  const spheres = [
-    new Sphere([0, -1, 3], 1, [255, 0, 0]),
-    new Sphere([2, 0, 4], 1, [0, 0, 255]),
-    new Sphere([-2, 0, 4], 1, [0, 255, 0])
+  const multiply = (k, vec) => [k*vec[0], k*vec[1], k*vec[2]]
+
+  const add = (v1, v2) =>
+    [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]]
+
+  const subtract = (v1, v2) => [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]]
+
+  const clamp = (vec) => [
+    Math.min(255, Math.max(0, vec[0])),
+    Math.min(255, Math.max(0, vec[1])),
+    Math.min(255, Math.max(0, vec[2])),
   ]
+
+  // Rendering functions
+  const computeLighting = (point, normal) => {
+    let intensity = 0;
+    const length_n = length(normal);
+
+    for (let i = 0; i < lights.length; i++) {
+      const light = lights[i];
+      if (light.ltype == Light.AMBIENT) {
+        intensity += light.intensity;
+      } else {
+        var vec_l;
+        if (light.ltype == Light.POINT) {
+          vec_l = subtract(light.position, point)
+        } else {
+          vec_l = light.position;
+        }
+
+        var n_dot_l = dotProduct(normal, vec_l);
+        if (n_dot_l > 0) {
+          intensity += light.intensity * n_dot_l / (length_n * length(vec_l))
+        }
+      }
+    }
+
+    return intensity;
+  }
 
   // Converts 2D canvas coords to 3D viewport coordinates
   const canvasToViewport = ([x, y]) => [
@@ -102,14 +162,18 @@
       return background_color
     }
 
-    return closest_sphere.color;
+    const point = add(origin, multiply(closest_t, direction))
+    let normal = subtract(point, closest_sphere.center)
+    normal = multiply(1.0 / length(normal), normal)
+
+    return multiply(computeLighting(point, normal), closest_sphere.color);
   }
 
   for (var x = -canvas.width / 2; x < canvas.width / 2; x++) {
     for (var y = -canvas.height / 2; y < canvas.height / 2; y++) {
       const direction = canvasToViewport([x, y]);
       const color = traceRay(camera_position, direction, 1, Infinity);
-      putPixel(x, y, color);
+      putPixel(x, y, clamp(color));
     }
   }
 
