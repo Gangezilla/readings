@@ -51,3 +51,5 @@ Lots of equation derivation leads to a classic quadratic equation.
 ## Rendering our first spheres
 
 For each pixel on the canvas, we can compute the corresponding point on the viewport. Given the position of the camera, we can express the equation of a ray that starts at the camera and goes through that point of the viewport.
+
+We should ignore everything where t is less than 0, otherwise it'll be behind the camera. We'll also ignore when t is greater than 1
